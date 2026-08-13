@@ -1,5 +1,4 @@
 "use client";
-import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -14,32 +13,36 @@ export function RegisterForm() {
     setError("");
     setLoading(true);
 
-    const res = await fetch("/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    const result = await res.json();
-    if (!result.success) {
-      setError(result.error);
-      setLoading(false);
-      return;
-    }
+    try {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-    const login = await signIn("credentials", {
-      email: form.email,
-      password: form.password,
-      redirect: false,
-    });
+      const text = await res.text();
+      let result: { success?: boolean; error?: string } = {};
 
-    setLoading(false);
-    if (login?.error) {
+      try {
+        if (text) {
+          result = JSON.parse(text);
+        }
+      } catch {
+        setError("Unexpected server response.");
+        return;
+      }
+
+      if (!result.success) {
+        setError(result.error ?? "Unable to create account.");
+        return;
+      }
+
       router.push("/login");
-      return;
+    } catch {
+      setError("Unable to reach the server. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    router.push("/dashboard");
-    router.refresh();
   }
 
   return (

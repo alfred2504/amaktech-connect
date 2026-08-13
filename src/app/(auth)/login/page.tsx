@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LoginForm } from "@/features/auth/components/login-form";
 
 export default function LoginPage() {
@@ -7,6 +8,16 @@ export default function LoginPage() {
       <h1 className="text-3xl font-bold">Welcome back</h1>
       <p className="text-slate-600">Sign in to your account.</p></div>
       <LoginForm />
+      <div className="text-center">
+        <div className="space-y-2 text-sm">
+          <Link href="/request-password-reset" className="block text-blue-600 hover:underline">
+            Forgot your password?
+          </Link>
+          <Link href="/resend-verification" className="block text-blue-600 hover:underline">
+            Resend verification email
+          </Link>
+        </div>
+      </div>
     </section>
   </main>;
 }

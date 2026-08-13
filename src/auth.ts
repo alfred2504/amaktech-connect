@@ -27,7 +27,14 @@ export const authOptions = {
             where: { email: parsed.data.email.toLowerCase() },
             include: { role: true },
           });
-          if (!user || !user.password || !user.role || !user.isActive) return null;
+          if (
+            !user ||
+            !user.password ||
+            !user.role ||
+            !user.isActive ||
+            !user.emailVerified
+          )
+            return null;
 
           const valid = await bcrypt.compare(parsed.data.password, user.password);
           if (!valid) return null;
