@@ -1,11 +1,13 @@
-export { default } from "next-auth/middleware";
+import NextAuthMiddleware from "next-auth/middleware";
+
+export const middleware = NextAuthMiddleware;
 
 export const config = {
   matcher: [
     "/dashboard/:path*",
-    "/account/:path*",
-    "/checkout/:path*",
+    "/profile/:path*",
     "/orders/:path*",
+    "/checkout/:path*",
     "/admin/:path*",
   ],
 };
