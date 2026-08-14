@@ -25,20 +25,9 @@ export const authOptions = {
         try {
           const user = await prisma.user.findUnique({
             where: { email: parsed.data.email.toLowerCase() },
-            include: { 
-              role: {
-                include: { permissions: true }
-              }
-            },
+            include: { role: true },
           });
-          if (
-            !user ||
-            !user.password ||
-            !user.role ||
-            !user.isActive ||
-            !user.emailVerified
-          )
-            return null;
+          if (!user || !user.password || !user.role || !user.isActive) return null;
 
           const valid = await bcrypt.compare(parsed.data.password, user.password);
           if (!valid) return null;
@@ -48,7 +37,6 @@ export const authOptions = {
             name: user.name,
             email: user.email,
             role: user.role.name,
-            permissions: user.role.permissions.map(p => p.name),
           };
         } catch (error) {
           console.error("NextAuth authorize error:", error);
@@ -62,7 +50,6 @@ export const authOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
-        token.permissions = user.permissions ?? [];
       }
       return token;
     },
@@ -70,7 +57,6 @@ export const authOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
-        session.user.permissions = (token.permissions as string[]) ?? [];
       }
       return session;
     },

@@ -1,19 +1,37 @@
+import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
-export { requireAuth } from "./auth/require-auth";
-export { requireRole } from "./auth/require-role";
-export { requirePermission } from "./auth/require-permission";
-
-export async function getCurrentSession() {
-  return await auth();
+export async function requireAuth() {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+  return session;
 }
 
-export async function requireAuthenticatedUser() {
-  const session = await auth();
-
-  if (!session?.user) {
-    throw new Error("UNAUTHORIZED");
+export async function requireRole(expected: string | string[]) {
+  const session = await requireAuth();
+  const roleName = session.user.role;
+  const allowed = Array.isArray(expected) ? expected : [expected];
+  if (!roleName || !allowed.includes(roleName)) {
+    redirect("/dashboard");
   }
+  return session;
+}
+
+export async function requirePermission(permissionName: string) {
+  const session = await requireAuth();
+  const roleName = session.user.role;
+  if (!roleName) redirect("/dashboard");
+
+  const role = await prisma.role.findUnique({
+    where: { name: roleName },
+    include: { permissions: true },
+  });
+
+  if (!role) redirect("/dashboard");
+
+  const has = role.permissions.some((p) => p.name === permissionName);
+  if (!has) redirect("/dashboard");
 
   return session;
 }

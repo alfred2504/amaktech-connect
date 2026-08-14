@@ -9,6 +9,11 @@ export const PERMISSIONS = {
   CATEGORY_UPDATE: "category.update",
   CATEGORY_DELETE: "category.delete",
 
+  BRAND_VIEW: "brand.view",
+  BRAND_CREATE: "brand.create",
+  BRAND_UPDATE: "brand.update",
+  BRAND_DELETE: "brand.delete",
+
   INVENTORY_VIEW: "inventory.view",
   INVENTORY_MANAGE: "inventory.manage",
 

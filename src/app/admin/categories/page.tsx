@@ -8,90 +8,79 @@ export default async function AdminCategoriesPage() {
   const categories = await getCategories();
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Categories</h1>
-        <Link
-          href="/admin/categories/new"
-          className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-        >
-          Add Category
-        </Link>
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-black text-slate-900">CATEGORIES</h1>
+              <p className="text-slate-600 text-sm mt-1">Manage product categories</p>
+            </div>
+            <Link
+              href="/admin/categories/new"
+              className="bg-green-700 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-800 transition-all transform hover:scale-105"
+            >
+              + Add Category
+            </Link>
+          </div>
+        </div>
       </div>
 
-      <div className="bg-white rounded-lg border">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="px-6 py-3 text-left text-sm font-semibold">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">
-                  Slug
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">
-                  Description
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold">
-                  Products
-                </th>
-                <th className="px-6 py-3 text-right text-sm font-semibold">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {categories.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-6 py-8 text-center text-gray-500"
-                  >
-                    No categories found. Create one to get started.
-                  </td>
-                </tr>
-              ) : (
-                categories.map((category) => (
-                  <tr key={category.id} className="border-b hover:bg-gray-50">
-                    <td className="px-6 py-4 font-medium">{category.name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {category.slug}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
-                      {category.description || "-"}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {category._count.products} product
-                      {category._count.products !== 1 ? "s" : ""}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {categories.length === 0 ? (
+          <div className="bg-white rounded-2xl border-2 border-slate-200 p-12 text-center">
+            <p className="text-slate-600 text-lg font-semibold">No categories found</p>
+            <Link href="/admin/categories/new" className="text-green-700 font-bold mt-4 inline-block">
+              Create your first category →
+            </Link>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50">
+                    <th className="px-6 py-4 text-left text-xs font-black text-slate-900 uppercase">Category Name</th>
+                    <th className="px-6 py-4 text-left text-xs font-black text-slate-900 uppercase">Slug</th>
+                    <th className="px-6 py-4 text-left text-xs font-black text-slate-900 uppercase">Description</th>
+                    <th className="px-6 py-4 text-left text-xs font-black text-slate-900 uppercase">Products</th>
+                    <th className="px-6 py-4 text-right text-xs font-black text-slate-900 uppercase">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categories.map((category) => (
+                    <tr key={category.id} className="border-b border-slate-200 hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <p className="font-semibold text-slate-900">{category.name}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm text-slate-600 font-mono">{category.slug}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm text-slate-600 line-clamp-2">{category.description || "—"}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
+                          View
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
                         <Link
                           href={`/admin/categories/${category.id}`}
-                          className="text-sm text-blue-600 hover:text-blue-800"
+                          className="text-green-700 hover:text-green-800 font-bold text-sm transition"
                         >
-                          Edit
+                          Edit →
                         </Link>
-                        <button
-                          className="text-sm text-red-600 hover:text-red-800 disabled:text-gray-400"
-                          disabled={category._count.products > 0}
-                          title={
-                            category._count.products > 0
-                              ? "Cannot delete category with products"
-                              : ""
-                          }
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
