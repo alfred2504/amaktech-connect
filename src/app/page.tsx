@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prima";
 import Image from "next/image";
+import Link from "next/link";
 
 async function getHomePageData() {
 	try {
@@ -83,7 +84,7 @@ async function getHomePageData() {
 	}
 }
 
-function getRating(reviews: any[]) {
+function getRating(reviews: Array<{ rating: number | null }>) {
 	if (reviews.length === 0) return "0";
 	const total = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
 	return (total / reviews.length).toFixed(1);
@@ -92,7 +93,6 @@ function getRating(reviews: any[]) {
 function renderStars(rating: string | number) {
 	const numRating = typeof rating === "string" ? parseFloat(rating) : rating;
 	const fullStars = Math.floor(numRating);
-	const hasHalf = numRating % 1 !== 0;
 	return (
 		<div className="flex gap-0.5">
 			{[...Array(5)].map((_, i) => (
@@ -112,34 +112,34 @@ export default async function HomePage() {
 			{/* Top Banner */}
 			<div className="bg-black text-white text-center py-3 text-sm font-medium">
 				Sign up and get 20% off your order.{" "}
-				<a href="/register" className="underline hover:text-yellow-300 font-bold">
+				<Link href="/register" className="underline hover:text-yellow-300 font-bold">
 					Sign Up Now
-				</a>
+				</Link>
 			</div>
 
 			{/* Header Navigation */}
 			<header className="sticky top-0 z-40 bg-white border-b border-slate-200">
 				<div className="mx-auto max-w-7xl px-6 py-5">
 					<div className="flex items-center justify-between gap-8">
-						<a href="/" className="text-3xl font-black">
+						<Link href="/" className="text-3xl font-black">
 							<span className="text-green-700">AMAKTECH</span>
 							<span className="text-yellow-400"> CONNECT</span>
-						</a>
+						</Link>
 
 						{/* Navigation Links */}
 						<nav className="hidden md:flex items-center gap-10">
-							<a href="/shop" className="text-slate-700 hover:text-green-700 font-semibold text-sm transition">
+							<Link href="/shop" className="text-slate-700 hover:text-green-700 font-semibold text-sm transition">
 								Shop
-							</a>
-							<a href="/shop" className="text-slate-700 hover:text-green-700 font-semibold text-sm transition">
+							</Link>
+							<Link href="/shop" className="text-slate-700 hover:text-green-700 font-semibold text-sm transition">
 								On Sale
-							</a>
-							<a href="/shop" className="text-slate-700 hover:text-green-700 font-semibold text-sm transition">
+							</Link>
+							<Link href="/shop" className="text-slate-700 hover:text-green-700 font-semibold text-sm transition">
 								New Arrivals
-							</a>
-							<a href="/shop" className="text-slate-700 hover:text-green-700 font-semibold text-sm transition">
+							</Link>
+							<Link href="/shop" className="text-slate-700 hover:text-green-700 font-semibold text-sm transition">
 								Brands
-							</a>
+							</Link>
 						</nav>
 
 						{/* Right Actions */}
@@ -149,12 +149,12 @@ export default async function HomePage() {
 								placeholder="Search products..."
 								className="hidden sm:block px-4 py-2.5 rounded-lg border-2 border-slate-200 text-sm focus:outline-none focus:border-green-700 w-56"
 							/>
-							<a href="/shop" className="text-slate-700 hover:text-green-700 text-2xl transition">
+							<Link href="/shop" className="text-slate-700 hover:text-green-700 text-2xl transition">
 								🛒
-							</a>
-							<a href="/dashboard" className="text-slate-700 hover:text-green-700 text-2xl transition">
+							</Link>
+							<Link href="/dashboard" className="text-slate-700 hover:text-green-700 text-2xl transition">
 								👤
-							</a>
+							</Link>
 						</div>
 					</div>
 				</div>
@@ -180,18 +180,18 @@ export default async function HomePage() {
 							</div>
 
 							<div className="flex flex-col sm:flex-row gap-4">
-								<a
+								<Link
 									href="/shop"
 									className="inline-flex items-center justify-center bg-black text-white px-10 py-4 rounded-lg font-bold hover:bg-slate-800 transition-all transform hover:scale-105 shadow-lg"
 								>
 									Shop Now
-								</a>
-								<a
+								</Link>
+								<Link
 									href="/login"
 									className="inline-flex items-center justify-center border-2 border-slate-400 text-slate-900 px-10 py-4 rounded-lg font-bold hover:bg-slate-100 transition-all"
 								>
 									Sign In
-								</a>
+								</Link>
 							</div>
 
 							{/* Stats */}
@@ -237,12 +237,12 @@ export default async function HomePage() {
 				<div className="mx-auto max-w-7xl px-6">
 					<div className="flex flex-wrap gap-3 items-center">
 						<span className="font-bold text-slate-900 text-sm">FILTER BY:</span>
-						<a
+						<Link
 							href="/shop"
 							className="px-6 py-2.5 rounded-full bg-white border-2 border-slate-300 text-slate-700 hover:bg-green-50 hover:border-green-700 transition-all font-bold text-sm"
 						>
 							All
-						</a>
+						</Link>
 						{categories.slice(0, 4).map((category, index) => (
 							<a
 								key={category.id}
@@ -329,13 +329,13 @@ export default async function HomePage() {
 						<p className="text-center text-sm text-slate-400 mb-4">Shop from premium brands</p>
 						<div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
 							{brands.map((brand) => (
-								<a
+								<Link
 									key={brand.id}
 									href={`/shop?brand=${brand.slug}`}
 									className="font-bold text-slate-300 hover:text-white cursor-pointer transition-colors"
 								>
 									{brand.name}
-								</a>
+								</Link>
 							))}
 						</div>
 					</div>
@@ -468,9 +468,11 @@ export default async function HomePage() {
 										}`}
 									/>
 									{category.image && (
-										<img
+										<Image
 											src={category.image}
 											alt={category.name}
+											fill
+											sizes="(max-width: 768px) 50vw, 25vw"
 											className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
 										/>
 									)}
@@ -503,7 +505,7 @@ export default async function HomePage() {
 										<span className="text-xs text-green-700 bg-green-100 px-2 py-1 rounded-full font-bold">✓ Verified</span>
 									</div>
 									<p className="text-slate-600 text-sm mb-4 line-clamp-3 leading-relaxed">
-										"{review.comment || "Great product!"}"
+											&quot;{review.comment || "Great product!"}&quot;
 									</p>
 									{review.product && (
 										<p className="text-xs text-slate-500 font-semibold">
@@ -541,7 +543,7 @@ export default async function HomePage() {
 						{/* Company Info */}
 						<div>
 							<h3 className="text-white font-black mb-4 text-lg">AMAKTECH CONNECT</h3>
-							<p className="text-sm leading-relaxed">We have clothes that suits your style and which you're proud to wear. From women to men.</p>
+							<p className="text-sm leading-relaxed">We have clothes that suits your style and which you&apos;re proud to wear. From women to men.</p>
 						</div>
 
 						{/* Company */}

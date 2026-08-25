@@ -1,5 +1,4 @@
 import { getProducts } from "@/features/products/actions/get-products";
-import Image from "next/image";
 import Link from "next/link";
 
 export default async function ProductsPage() {

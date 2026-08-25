@@ -26,16 +26,16 @@ export function LoginForm() {
 
       console.debug("signIn result:", result);
 
-      const ok = (result as any)?.ok ?? false;
-      const url = (result as any)?.url as string | undefined;
+      const ok = result?.ok ?? false;
+      const url = result?.url;
 
-      if (ok || (url && !((result as any).error))) {
+      if (ok || (url && !result.error)) {
         await router.push(url ?? "/dashboard");
         router.refresh();
         return;
       }
 
-      setError(result?.error ? String((result as any).error) : "Invalid email or password.");
+      setError(result?.error ? String(result.error) : "Invalid email or password.");
     } catch (err) {
       console.error("Login error:", err);
       setError("Server error");

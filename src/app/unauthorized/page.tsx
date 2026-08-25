@@ -12,7 +12,7 @@ export default function UnauthorizedPage() {
         </div>
 
         <p className="text-gray-600 mb-8">
-          You don't have permission to access this resource. If you believe this
+          You don&apos;t have permission to access this resource. If you believe this
           is a mistake, please contact support.
         </p>
 

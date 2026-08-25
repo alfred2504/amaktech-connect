@@ -18,7 +18,7 @@ async function getDashboardStats() {
     ]);
 
     return { totalOrders, totalProducts, totalCategories, totalBrands, totalCustomers, recentOrders };
-  } catch (error) {
+          } catch {
     return { totalOrders: 0, totalProducts: 0, totalCategories: 0, totalBrands: 0, totalCustomers: 0, recentOrders: [] };
   }
 }
@@ -37,7 +37,7 @@ export default async function DashboardPage() {
               Welcome back, {session.user.name ?? "Admin"}! 👋
             </h1>
             <p className="text-slate-600 mt-2">
-              You're signed in as <span className="font-bold text-green-700">{session.user.role}</span>
+              You&apos;re signed in as <span className="font-bold text-green-700">{session.user.role}</span>
             </p>
           </div>
         </div>

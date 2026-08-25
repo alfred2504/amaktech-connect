@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
@@ -18,7 +19,7 @@ async function main() {
     create: { name: 'Super Administrator', description: 'Full access to the platform' },
   });
 
-  const admin = await prisma.role.upsert({
+  await prisma.role.upsert({
     where: { name: 'Administrator' },
     update: { description: 'Administrative access to manage the platform' },
     create: { name: 'Administrator', description: 'Administrative access to manage the platform' },

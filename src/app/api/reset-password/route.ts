@@ -7,7 +7,8 @@ export async function POST(req: Request) {
     const { token, password } = body;
     const result = await resetPassword(token, password);
     return NextResponse.json(result);
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err?.message ?? "Server error" }, { status: 500 });
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err.message : "Server error";
+    return NextResponse.json({ success: false, error }, { status: 500 });
   }
 }
