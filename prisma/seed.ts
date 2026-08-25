@@ -17,6 +17,8 @@ const permissions = [
 
   "inventory.view",
   "inventory.manage",
+  "inventory:read",
+  "inventory:update",
 
   "order.view",
   "order.view_own",

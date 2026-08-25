@@ -16,6 +16,8 @@ export const PERMISSIONS = {
 
   INVENTORY_VIEW: "inventory.view",
   INVENTORY_MANAGE: "inventory.manage",
+  INVENTORY_READ: "inventory:read",
+  INVENTORY_UPDATE: "inventory:update",
 
   ORDER_VIEW: "order.view",
   ORDER_VIEW_OWN: "order.view_own",

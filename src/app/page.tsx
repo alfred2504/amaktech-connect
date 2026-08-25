@@ -472,6 +472,7 @@ export default async function HomePage() {
 											src={category.image}
 											alt={category.name}
 											fill
+											unoptimized
 											sizes="(max-width: 768px) 50vw, 25vw"
 											className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
 										/>
