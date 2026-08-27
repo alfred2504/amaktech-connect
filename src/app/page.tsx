@@ -41,7 +41,7 @@ async function getHomePageData() {
 			orderBy: { reviews: { _count: "desc" } },
 		});
 
-		// Fetch all categories for browse by style
+		// Fetch all categories for broad product discovery
 		const allCategories = await prisma.category.findMany({
 			where: { deletedAt: null, parentId: null },
 			take: 8,
@@ -168,14 +168,14 @@ export default async function HomePage() {
 						<div className="space-y-8">
 							<div className="space-y-4">
 								<h1 className="text-6xl md:text-7xl font-black text-slate-900 leading-tight">
-									FIND CLOTHES
+									FIND EVERYTHING
 									<br />
-									<span className="text-green-700">THAT MATCHES</span>
+									<span className="text-green-700">YOU NEED</span>
 									<br />
-									YOUR STYLE
+									IN ONE PLACE
 								</h1>
 								<p className="text-slate-600 text-lg leading-relaxed max-w-lg">
-									Browse through our extensive collection and find clothes that perfectly match your personal style. Quality products at great prices.
+									Browse a wide range of quality products for every part of life, from everyday essentials to the things you love, all at great prices.
 								</p>
 							</div>
 
@@ -215,16 +215,16 @@ export default async function HomePage() {
 						<div className="hidden md:block">
 							<div className="grid grid-cols-2 gap-4 h-full">
 								<div className="bg-gradient-to-br from-yellow-200 to-yellow-100 rounded-2xl aspect-square flex items-center justify-center text-8xl transform hover:scale-110 transition-transform">
-									👕
+									🛍️
 								</div>
 								<div className="bg-gradient-to-br from-green-200 to-green-100 rounded-2xl aspect-square flex items-center justify-center text-8xl transform hover:scale-110 transition-transform">
-									👔
+									📱
 								</div>
 								<div className="bg-gradient-to-br from-emerald-200 to-emerald-100 rounded-2xl aspect-square flex items-center justify-center text-8xl transform hover:scale-110 transition-transform">
-									👟
+									🏠
 								</div>
 								<div className="bg-gradient-to-br from-blue-200 to-blue-100 rounded-2xl aspect-square flex items-center justify-center text-8xl transform hover:scale-110 transition-transform">
-									👜
+									🎧
 								</div>
 							</div>
 						</div>
@@ -444,7 +444,7 @@ export default async function HomePage() {
 				</div>
 			</section>
 
-			{/* Browse By Category Style Section */}
+			{/* Browse By Category Section */}
 			{allCategories.length > 0 && (
 				<section className="py-20 border-b border-slate-200 bg-slate-50">
 					<div className="mx-auto max-w-7xl px-6">
@@ -544,7 +544,7 @@ export default async function HomePage() {
 						{/* Company Info */}
 						<div>
 							<h3 className="text-white font-black mb-4 text-lg">AMAKTECH CONNECT</h3>
-							<p className="text-sm leading-relaxed">We have clothes that suits your style and which you&apos;re proud to wear. From women to men.</p>
+							<p className="text-sm leading-relaxed">Discover quality products across categories, thoughtfully brought together for everyday life.</p>
 						</div>
 
 						{/* Company */}
