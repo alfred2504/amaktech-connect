@@ -30,7 +30,7 @@ export function ProductCard({
 
   return (
     <Link
-      href={`/store/${product.slug}`}
+      href={`/store/products/${product.slug}`}
       className="group block overflow-hidden rounded-xl border bg-white transition hover:shadow-lg"
     >
       <div className="relative aspect-square overflow-hidden bg-slate-100">
