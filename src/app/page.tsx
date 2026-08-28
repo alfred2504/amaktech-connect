@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prima";
 import Image from "next/image";
 import Link from "next/link";
+import { CartCounter } from "@/features/cart/components/cart-counter";
 
 async function getHomePageData() {
 	try {
@@ -149,9 +150,7 @@ export default async function HomePage() {
 								placeholder="Search products..."
 								className="hidden sm:block px-4 py-2.5 rounded-lg border-2 border-slate-200 text-sm focus:outline-none focus:border-green-700 w-56"
 							/>
-							<Link href="/shop" className="text-slate-700 hover:text-green-700 text-2xl transition">
-								🛒
-							</Link>
+							<CartCounter />
 							<Link href="/dashboard" className="text-slate-700 hover:text-green-700 text-2xl transition">
 								👤
 							</Link>

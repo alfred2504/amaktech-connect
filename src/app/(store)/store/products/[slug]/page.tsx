@@ -116,7 +116,6 @@ export default async function ProductPage({
             <div className="mt-8">
               <AddToCart
                 productId={product.id}
-                productName={product.name}
                 availableStock={availableStock}
               />
             </div>

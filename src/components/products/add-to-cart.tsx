@@ -1,26 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 type Props = {
   productId: string;
-  productName: string;
   availableStock: number;
 };
 
 export function AddToCart({
   productId,
-  productName,
   availableStock,
 }: Props) {
   const [quantity, setQuantity] =
     useState(1);
   const [loading, setLoading] =
     useState(false);
-  const [message, setMessage] =
-    useState("");
-  const [error, setError] =
-    useState("");
 
   const disabled =
     availableStock <= 0;
@@ -43,8 +38,6 @@ export function AddToCart({
   async function handleAddToCart() {
     try {
       setLoading(true);
-      setMessage("");
-      setError("");
 
       const response = await fetch(
         "/api/cart",
@@ -68,11 +61,12 @@ export function AddToCart({
         );
       }
 
-      setMessage(
-        `${productName} added to your cart.`
+      toast.success("Product added to cart.");
+      window.dispatchEvent(
+        new Event("cart-updated")
       );
     } catch (err) {
-      setError(
+      toast.error(
         err instanceof Error
           ? err.message
           : "Failed to add product to cart."
@@ -124,17 +118,6 @@ export function AddToCart({
           : "Add to Cart"}
       </button>
 
-      {message && (
-        <p className="text-sm text-emerald-600">
-          {message}
-        </p>
-      )}
-
-      {error && (
-        <p className="text-sm text-red-600">
-          {error}
-        </p>
-      )}
     </div>
   );
 }

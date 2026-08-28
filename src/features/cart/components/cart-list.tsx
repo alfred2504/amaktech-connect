@@ -86,6 +86,9 @@ export function CartList() {
       }
 
       setCart(data.cart);
+      window.dispatchEvent(
+        new Event("cart-updated")
+      );
     } catch (err) {
       setError(
         err instanceof Error
@@ -111,6 +114,9 @@ export function CartList() {
       }
 
       setCart(data.cart);
+      window.dispatchEvent(
+        new Event("cart-updated")
+      );
     } catch (err) {
       setError(
         err instanceof Error
