@@ -6,17 +6,24 @@ export async function POST(request: Request) {
   const formData = await request.formData()
   const email = String(formData.get('email') || '').trim().toLowerCase()
   const password = String(formData.get('password') || '')
-  const users = email
-    ? await prisma.$queryRaw<Array<{ id: string; password: string; role: string }>>`
-        SELECT u.id, u.password, r.name AS role
-        FROM public."User" u
-        JOIN public."Role" r ON r.id = u."roleId"
-        WHERE lower(u.email) = ${email}
-          AND u."isActive" = TRUE
-          AND u."deletedAt" IS NULL
-        LIMIT 1
-      `
-    : []
+  let users: Array<{ id: string; password: string; role: string }> = []
+
+  try {
+    users = email
+      ? await prisma.$queryRaw<Array<{ id: string; password: string; role: string }>>`
+          SELECT u.id, u.password, r.name AS role
+          FROM public."User" u
+          JOIN public."Role" r ON r.id = u."roleId"
+          WHERE lower(u.email) = ${email}
+            AND u."isActive" = TRUE
+            AND u."deletedAt" IS NULL
+          LIMIT 1
+        `
+      : []
+  } catch (error) {
+    console.error('Login database query failed:', error)
+    return NextResponse.redirect(new URL('/login?error=unavailable', request.url), 303)
+  }
   const user = users[0]
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
