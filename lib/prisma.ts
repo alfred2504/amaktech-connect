@@ -4,7 +4,7 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-const databaseUrl = process.env.DATABASE_URL
+const databaseUrl = process.env.DATABASE_URL ?? process.env.DIRECT_URL
 const datasourceUrl = databaseUrl
   ? `${databaseUrl}${databaseUrl.includes('?') ? '&' : '?'}connection_limit=1`
   : undefined
