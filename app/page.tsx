@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { money } from '@/lib/utils'
 
@@ -18,18 +19,29 @@ const fallbackSettings = {
 	stat_customers: '30,000+',
 }
 
+type LandingProduct = Prisma.ProductGetPayload<{
+	include: { images: true; brand: true }
+}>
+
 export default async function Home() {
-	const [products, settings] = await Promise.all([
-		prisma.product.findMany({
-			where: { isActive: true, deletedAt: null },
-			include: { images: true, brand: true },
-			take: 8,
-			orderBy: { createdAt: 'desc' },
-		}),
-		prisma.$queryRawUnsafe<Array<{ key: string; value: string }>>(
-			'SELECT key, value FROM public."Setting" WHERE "deletedAt" IS NULL',
-		),
-	])
+	let products: LandingProduct[] = []
+	let settings: Array<{ key: string; value: string }> = []
+
+	try {
+		[products, settings] = await Promise.all([
+			prisma.product.findMany({
+				where: { isActive: true, deletedAt: null },
+				include: { images: true, brand: true },
+				take: 8,
+				orderBy: { createdAt: 'desc' },
+			}),
+			prisma.$queryRawUnsafe<Array<{ key: string; value: string }>>(
+				'SELECT key, value FROM public."Setting" WHERE "deletedAt" IS NULL',
+			),
+		])
+	} catch (error) {
+		console.error('Failed to load landing page data:', error)
+	}
 
 	const siteSettings = settings.reduce<Record<string, string>>(
 		(values, setting) => ({ ...values, [setting.key]: setting.value }),
