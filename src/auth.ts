@@ -1,8 +1,6 @@
 import NextAuth from "next-auth";
-import type { Session, User } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { getServerSession } from "next-auth";
-import type { JWT } from "next-auth/jwt";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
@@ -48,14 +46,14 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }: { token: JWT; user?: User }) {
+    async jwt({ token, user }: { token: any; user?: any }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
       }
       return token;
     },
-    async session({ session, token }: { session: Session; token: JWT }) {
+    async session({ session, token }: { session: any; token: any }) {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;

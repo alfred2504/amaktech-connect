@@ -30,17 +30,7 @@ export async function requirePermission(permissionName: string) {
 
   if (!role) redirect("/dashboard");
 
-  const permissionAliases: Record<string, string[]> = {
-    "inventory:read": ["inventory.view"],
-    "inventory:update": ["inventory.manage"],
-  };
-  const acceptedNames = [
-    permissionName,
-    ...(permissionAliases[permissionName] ?? []),
-  ];
-  const has = role.permissions.some((p) =>
-    acceptedNames.includes(p.name)
-  );
+  const has = role.permissions.some((p) => p.name === permissionName);
   if (!has) redirect("/dashboard");
 
   return session;
