@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prima";
+import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
 import { CartCounter } from "@/features/cart/components/cart-counter";

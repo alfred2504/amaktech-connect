@@ -81,18 +81,18 @@ export function ProductForm({
       sku: form.sku,
       price: Number(form.price),
       compareAtPrice:
-        form.compareAtPrice === ""
-          ? ""
+        form.compareAtPrice.trim() === ""
+          ? null
           : Number(form.compareAtPrice),
       categoryId: form.categoryId,
-      brandId: form.brandId,
+      brandId: form.brandId || null,
       isActive: form.isActive,
     });
 
     setLoading(false);
 
     if (!result.success) {
-      setError(result.error);
+      setError(result.error ?? "Invalid product details.");
       return;
     }
 

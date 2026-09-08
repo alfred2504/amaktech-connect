@@ -1,0 +1,2 @@
+import {NextResponse} from 'next/server'; import {prisma} from '@/lib/prisma'; import {requireAdmin} from '@/lib/auth';
+export async function PATCH(req:Request){try{await requireAdmin();const {id,status,paymentStatus}=await req.json();const o=await prisma.order.update({where:{id},data:{...(status?{status}:{}),...(paymentStatus?{paymentStatus}: {})}});return NextResponse.json(o)}catch{return NextResponse.json({error:'Unable to update order'},{status:400})}}

@@ -4,6 +4,17 @@ import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+function getFriendlyAuthError(error: string | undefined) {
+  switch (error) {
+    case "CredentialsSignin":
+      return "Invalid email or password.";
+    case "Configuration":
+      return "Authentication is temporarily unavailable. Please try again later.";
+    default:
+      return error ? "Unable to sign in. Please try again." : "Invalid email or password.";
+  }
+}
+
 export function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -24,8 +35,6 @@ export function LoginForm() {
         callbackUrl: "/dashboard",
       });
 
-      console.debug("signIn result:", result);
-
       const ok = result?.ok ?? false;
       const url = result?.url;
 
@@ -35,7 +44,11 @@ export function LoginForm() {
         return;
       }
 
-      setError(result?.error ? String(result.error) : "Invalid email or password.");
+      setError(
+        getFriendlyAuthError(
+          result?.error ?? undefined
+        )
+      );
     } catch (err) {
       console.error("Login error:", err);
       setError("Server error");

@@ -148,10 +148,8 @@ export async function POST(
                 sku: data.sku,
                 price: data.price,
                 compareAtPrice:
-                  data.compareAtPrice === ""
-                    ? null
-                    : data.compareAtPrice ??
-                      null,
+                  data.compareAtPrice ??
+                  null,
                 categoryId:
                   data.categoryId,
                 brandId:

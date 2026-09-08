@@ -1,0 +1,6 @@
+import Link from 'next/link'
+import { requireAdmin } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { money } from '@/lib/utils'
+
+export default async function AdminProducts() { await requireAdmin(); const products = await prisma.$queryRawUnsafe<Array<{id:string;name:string;slug:string;price:number;isActive:boolean;category:string}>>('SELECT p.id,p.name,p.slug,p.price,p."isActive",c.name AS category FROM public."Product" p JOIN public."Category" c ON c.id=p."categoryId" WHERE p."deletedAt" IS NULL ORDER BY p."createdAt" DESC'); return <main className="container" style={{paddingTop:40}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:16}}><h1>Products</h1><Link className="btn primary" href="/products">View storefront</Link></div><div className="grid" style={{marginTop:24}}>{products.map(product=><div className="card" key={product.id}><h3>{product.name}</h3><p>{product.category} • {money(product.price)}</p><small>{product.isActive?'Active':'Inactive'}</small></div>)}</div></main> }

@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   AddressSelector,
@@ -16,16 +18,77 @@ type CheckoutTotals = {
 };
 
 export function CheckoutForm() {
+  const router = useRouter();
   const [totals, setTotals] =
     useState<CheckoutTotals | null>(null);
   const [selectedAddress, setSelectedAddress] =
     useState<Address | null>(null);
+  const [submitting, setSubmitting] =
+    useState(false);
 
   const [loading, setLoading] =
     useState(true);
 
   const [error, setError] =
     useState("");
+
+  async function placeOrder() {
+    const selectedAddressId =
+      selectedAddress?.id;
+
+    if (!selectedAddressId) {
+      toast.error(
+        "Please select a delivery address."
+      );
+
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const response = await fetch(
+        "/api/orders",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            addressId: selectedAddressId,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            "Unable to place order."
+        );
+      }
+
+      toast.success(
+        "Order created successfully."
+      );
+
+      router.push(
+        `/checkout/success?order=${encodeURIComponent(
+          data.order.orderNumber
+        )}`
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to place order."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   useEffect(() => {
     async function loadCheckout() {
@@ -180,6 +243,17 @@ export function CheckoutForm() {
               </span>
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={placeOrder}
+            disabled={submitting}
+            className="mt-6 w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {submitting
+              ? "Creating Order..."
+              : "Place Order"}
+          </button>
         </div>
       </aside>
     </div>

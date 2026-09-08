@@ -26,12 +26,6 @@ export const brandSchema = z.object({
     .optional()
     .or(z.literal("")),
 
-  website: z
-    .string()
-    .url()
-    .optional()
-    .or(z.literal("")),
-
   isActive: z.boolean().default(true),
 });
 

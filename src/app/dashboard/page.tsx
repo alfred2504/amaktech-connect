@@ -1,5 +1,5 @@
 import { requireAuth } from "@/lib/authorization";
-import { prisma } from "@/lib/prima";
+import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
 async function getDashboardStats() {

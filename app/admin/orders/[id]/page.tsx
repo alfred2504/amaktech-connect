@@ -1,0 +1,7 @@
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { requireAdmin } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { money } from '@/lib/utils'
+
+export default async function AdminOrderDetail({ params }: { params: Promise<{ id: string }> }) { await requireAdmin(); const {id}=await params; const orders=await prisma.$queryRawUnsafe<Array<{id:string;name:string;email:string;status:string;total:number;createdAt:Date}>>('SELECT o.id,u.name,u.email,o.status,o.total,o."createdAt" FROM public."Order" o JOIN public."User" u ON u.id=o."userId" WHERE o.id=$1::uuid AND o."deletedAt" IS NULL LIMIT 1',id); if(!orders[0]) notFound(); const items=await prisma.$queryRawUnsafe<Array<{name:string;quantity:number;unitPrice:number}>>('SELECT p.name,oi.quantity,oi."unitPrice" FROM public."OrderItem" oi JOIN public."Product" p ON p.id=oi."productId" WHERE oi."orderId"=$1::uuid',id); return <main className="container" style={{paddingTop:40}}><Link href="/admin/orders" className="muted">← All orders</Link><h1>Order {id.slice(0,8)}</h1><p>{orders[0].name} • {orders[0].email}</p><p>{orders[0].status} • {money(orders[0].total)} • {orders[0].createdAt.toLocaleString()}</p><div className="grid" style={{marginTop:24}}>{items.map((item,index)=><div className="card" key={`${item.name}-${index}`}><b>{item.name}</b><p>{item.quantity} × {money(item.unitPrice)}</p></div>)}</div></main> }

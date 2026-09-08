@@ -1,0 +1,3 @@
+import {NextResponse} from 'next/server'; import {prisma} from '@/lib/prisma'; import {requireUser} from '@/lib/auth';
+export async function GET(){try{const s=await requireUser();return NextResponse.json(await prisma.address.findMany({where:{userId:s.id,deletedAt:null},orderBy:{isDefault:'desc'}}))}catch{return NextResponse.json({error:'Unauthorized'},{status:401})}}
+export async function POST(req:Request){try{const s=await requireUser();const b=await req.json();const count=await prisma.address.count({where:{userId:s.id,deletedAt:null}});const a=await prisma.address.create({data:{...b,userId:s.id,isDefault:count===0}});return NextResponse.json(a)}catch{return NextResponse.json({error:'Invalid address'},{status:400})}}

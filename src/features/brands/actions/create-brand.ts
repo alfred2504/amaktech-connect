@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 
-import { requirePermission } from "@/lib/auth/authorization";
+import { requirePermission } from "@/lib/authorization";
 import { PERMISSIONS } from "@/features/authorization/permissions";
 
 import {
@@ -52,8 +52,6 @@ export async function createBrand(input: BrandInput) {
       description:
         parsed.data.description || null,
       logo: parsed.data.logo || null,
-      website:
-        parsed.data.website || null,
       isActive: parsed.data.isActive,
     },
   });

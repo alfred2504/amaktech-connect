@@ -46,19 +46,29 @@ export async function updateCategory(
     parsed.data.name ||
     parsed.data.slug
   ) {
+    const orConditions: Array<
+      | { name: string }
+      | { slug: string }
+    > = [];
+
+    if (parsed.data.name) {
+      orConditions.push({
+        name: parsed.data.name,
+      });
+    }
+
+    if (parsed.data.slug) {
+      orConditions.push({
+        slug: parsed.data.slug,
+      });
+    }
+
     const existing =
       await prisma.category.findFirst({
         where: {
           id: { not: id },
           deletedAt: null,
-          OR: [
-            parsed.data.name && {
-              name: parsed.data.name,
-            },
-            parsed.data.slug && {
-              slug: parsed.data.slug,
-            },
-          ].filter(Boolean),
+          OR: orConditions,
         },
       });
 
