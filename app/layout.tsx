@@ -1,3 +1,5 @@
+import './globals.css'
+
 export const metadata = {
   title: 'AmakTech Connect',
   description: 'A diverse marketplace for electronics, home essentials, lifestyle products, and more.',
