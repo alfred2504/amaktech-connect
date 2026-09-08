@@ -138,11 +138,9 @@ export async function createOrder({
       /*
        * 5. Create order
        */
+      const orderNumber = generateOrderNumber();
       const result = await tx.order.create({
         data: {
-          orderNumber:
-            generateOrderNumber(),
-
           userId,
 
           addressId,
@@ -240,7 +238,7 @@ export async function createOrder({
         },
       });
 
-      return order;
+      return {...order, orderNumber};
     },
     {
       /*

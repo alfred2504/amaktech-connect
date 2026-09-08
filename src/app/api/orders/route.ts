@@ -63,8 +63,8 @@ export async function POST(
             order.shipping.toString(),
           total:
             order.total.toString(),
-          items: order.items.map(
-            (item) => ({
+          items: ((order as any).items ?? []).map(
+            (item: any) => ({
               id: item.id,
               productId:
                 item.productId,
@@ -79,7 +79,7 @@ export async function POST(
             })
           ),
           address:
-            order.address,
+            (order as any).address,
         },
       },
       {

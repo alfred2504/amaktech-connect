@@ -52,7 +52,6 @@ export async function createBrand(input: BrandInput) {
       description:
         parsed.data.description || null,
       logo: parsed.data.logo || null,
-      isActive: parsed.data.isActive,
     },
   });
 
