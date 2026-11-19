@@ -36,6 +36,11 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "app/page (*).tsx",
+    "src",
+    "components/providers/session-provider.tsx",
+    "components/ui/button.tsx",
+    "components/ui/protected-link.tsx"
   ]
 }

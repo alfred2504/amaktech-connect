@@ -8,5 +8,5 @@ export default defineConfig([
     'eslint-config-next/core-web-vitals.js',
     'eslint-config-next/typescript.js',
   ),
-  globalIgnores(['.next/**', 'node_modules/**']),
+  globalIgnores(['.next/**', 'node_modules/**', 'app/page *']),
 ]);

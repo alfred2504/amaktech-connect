@@ -13,7 +13,7 @@ export default async function Products({ searchParams }: { searchParams: Promise
   const q = (await searchParams).q || ''
   let products: ProductListItem[] = []
   try {
-    products = await prisma.product.findMany({ where: { isActive: true, deletedAt: null, OR: q ? [{ name: { contains: q } }, { description: { contains: q } }, { sku: { contains: q } }] : undefined }, include: { images: true, category: true }, orderBy: { createdAt: 'desc' } })
+    products = await prisma.product.findMany({ where: { active: true, deletedAt: null, OR: q ? [{ name: { contains: q } }, { description: { contains: q } }, { sku: { contains: q } }] : undefined }, include: { images: true, category: true }, orderBy: { createdAt: 'desc' } })
   } catch (error) {
     console.error('Failed to load products page data:', error)
   }

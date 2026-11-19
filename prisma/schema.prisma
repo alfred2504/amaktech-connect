@@ -6,13 +6,56 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserRole { CUSTOMER SELLER ADMIN }
-enum SellerStatus { PENDING APPROVED SUSPENDED REJECTED }
-enum OrderStatus { PENDING CONFIRMED PROCESSING SHIPPED DELIVERED CANCELLED REFUNDED }
-enum PaymentStatus { PENDING PAID FAILED REFUNDED }
-enum PaymentMethod { CASH_ON_DELIVERY ECOCASH INNBucks BANK_TRANSFER CARD }
-enum ReviewStatus { PENDING APPROVED REJECTED }
-enum PayoutStatus { PENDING PROCESSING PAID FAILED }
+enum UserRole {
+  CUSTOMER
+  SELLER
+  ADMIN
+}
+
+enum SellerStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+  REJECTED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH_ON_DELIVERY
+  ECOCASH
+  INNBucks
+  BANK_TRANSFER
+  CARD
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+}
 
 model User {
   id           String      @id @default(cuid())
@@ -45,6 +88,7 @@ model Address {
   postalCode String?
   isDefault  Boolean @default(false)
   createdAt DateTime @default(now())
+  deletedAt  DateTime?
 }
 model Seller {
   id            String       @id @default(cuid())
@@ -89,11 +133,10 @@ model Product {
   sku          String?  @unique
   stock        Int      @default(0)
   imageUrl     String?
-  images      Json?
   brand       String?
   attributes  Json?
   featured   Boolean  @default(false)
-  active     Boolean  @default(true)
+  active     Boolean  @default(true) @map("isActive")
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   sellerId  String?
@@ -101,11 +144,23 @@ model Product {
   orderItems OrderItem[]
   reviews   Review[]
   wishlistItems WishlistItem[]
+  images    ProductImage[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
   @@index([categoryId, active])
   @@index([sellerId, active])
   @@index([name])
+}
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  url       String
+  altText   String?
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 model Order {
   id             String        @id @default(cuid())

@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "prebuild": "npm run db:generate",
+    "build": "node --max-old-space-size=4096 node_modules/next/dist/bin/next build",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "eslint app/account app/admin app/api app/cart app/checkout app/forgot-password app/login app/logout app/products app/register app/reset-password app/seller app/shop app/vendor app/layout.tsx app/page.tsx components src lib scripts prisma middleware.ts next.config.ts eslint.config.mjs postcss.config.mjs",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts"
@@ -24,6 +25,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",
     "@tailwindcss/postcss": "^4.1.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
