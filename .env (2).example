@@ -1,4 +1,0 @@
-# PostgreSQL connection string (Supabase or other PostgreSQL provider)
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DATABASE?sslmode=require"
-# Required to access /admin API routes. Use a long random value.
-ADMIN_API_TOKEN="replace-with-a-long-random-secret"

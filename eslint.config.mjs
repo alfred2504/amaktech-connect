@@ -1,4 +1,12 @@
 import { defineConfig, globalIgnores } from 'eslint/config';
-import nextVitals from 'eslint-config-next/core-web-vitals';
-import nextTs from 'eslint-config-next/typescript';
-export default defineConfig([...nextVitals, ...nextTs, globalIgnores(['.next/**','node_modules/**'])]);
+import { FlatCompat } from '@eslint/eslintrc';
+
+const compat = new FlatCompat({ baseDirectory: process.cwd() });
+
+export default defineConfig([
+  ...compat.extends(
+    'eslint-config-next/core-web-vitals.js',
+    'eslint-config-next/typescript.js',
+  ),
+  globalIgnores(['.next/**', 'node_modules/**']),
+]);
