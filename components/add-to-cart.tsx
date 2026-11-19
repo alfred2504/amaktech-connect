@@ -1,0 +1,5 @@
+'use client';
+import {useState} from 'react';
+import {ShoppingCart} from 'lucide-react';
+export type CartProduct={id:string;name:string;price:number;currency:string;imageUrl?:string|null;slug:string};
+export function AddToCart({product}:{product:CartProduct}){const [qty,setQty]=useState(1);const [message,setMessage]=useState('');function add(){try{const cart=JSON.parse(localStorage.getItem('amaktech-cart')||'[]');const existing=cart.find((i:CartProduct&{quantity:number})=>i.id===product.id);if(existing)existing.quantity+=qty;else cart.push({...product,quantity:qty});localStorage.setItem('amaktech-cart',JSON.stringify(cart));setMessage('Added to cart.');}catch{setMessage('Could not update cart.')}}return <div className="add-cart"><div className="quantity"><button onClick={()=>setQty(Math.max(1,qty-1))}>−</button><span>{qty}</span><button onClick={()=>setQty(qty+1)}>+</button></div><button className="button primary" onClick={add}><ShoppingCart size={17}/> Add to cart</button>{message&&<small className="cart-feedback">{message}</small>}</div>}

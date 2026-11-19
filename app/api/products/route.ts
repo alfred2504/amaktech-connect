@@ -1,3 +1,7 @@
-import {NextResponse} from 'next/server'; import {prisma} from '@/lib/prisma'; import {requireAdmin} from '@/lib/auth'; import {slugify} from '@/lib/utils';
-export async function GET(){return NextResponse.json(await prisma.product.findMany({where:{deletedAt:null},include:{category:true,brand:true,inventory:true,images:true},orderBy:{createdAt:'desc'}}))}
-export async function POST(req:Request){try{const s=await requireAdmin();const b=await req.json();const category=await prisma.category.findUnique({where:{id:b.categoryId}});if(!category)return NextResponse.json({error:'Category required'},{status:400});const slug=slugify(b.slug||b.name);const p=await prisma.product.create({data:{name:b.name,slug,sku:b.sku,description:b.description||null,price:Number(b.price),compareAtPrice:b.compareAtPrice?Number(b.compareAtPrice):null,categoryId:b.categoryId,brandId:b.brandId||null,inventory:{create:{stock:Number(b.stock||0),lowStockThreshold:Number(b.lowStockThreshold||5)}}}});await prisma.auditLog.create({data:{userId:s.id,action:'CREATE',entity:'Product',entityId:p.id,details:b}});return NextResponse.json(p)}catch(e:any){return NextResponse.json({error:'Could not create product'},{status:400})}}
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+export async function GET(request:Request){
+  const url=new URL(request.url); const search=url.searchParams.get('q')?.trim(); const category=url.searchParams.get('category');
+  try { const products=await prisma.product.findMany({where:{active:true,...(search?{OR:[{name:{contains:search,mode:'insensitive'}},{description:{contains:search,mode:'insensitive'}},{brand:{contains:search,mode:'insensitive'}}]}:{}),...(category?{category:{slug:category}}:{})},include:{category:true},orderBy:[{featured:'desc'},{createdAt:'desc'}]}); return NextResponse.json(products); }
+  catch { return NextResponse.json({error:'Catalog database unavailable. Configure DATABASE_URL and run migrations.'},{status:503}); }
+}

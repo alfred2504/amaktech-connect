@@ -1,48 +1,14 @@
-import bcrypt from 'bcryptjs'
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-
-export async function POST(request: Request) {
-  const formData = await request.formData()
-  const email = String(formData.get('email') || '').trim().toLowerCase()
-  const password = String(formData.get('password') || '')
-  let users: Array<{ id: string; password: string; role: string }> = []
-
-  try {
-    users = email
-      ? await prisma.$queryRaw<Array<{ id: string; password: string; role: string }>>`
-          SELECT u.id, u.password, r.name AS role
-          FROM public."User" u
-          JOIN public."Role" r ON r.id = u."roleId"
-          WHERE lower(u.email) = ${email}
-            AND u."isActive" = TRUE
-            AND u."deletedAt" IS NULL
-          LIMIT 1
-        `
-      : []
-  } catch (error) {
-    console.error('Login database query failed:', error)
-    return NextResponse.redirect(new URL('/login?error=unavailable', request.url), 303)
-  }
-  const user = users[0]
-
-  if (!user || !(await bcrypt.compare(password, user.password))) {
-    return NextResponse.redirect(new URL('/login?error=invalid', request.url), 303)
-  }
-
-  const destination = ['Administrator', 'Super Administrator', 'ADMIN', 'SUPER_ADMIN'].includes(user.role)
-    ? '/admin'
-    : ['Vendor', 'Seller', 'VENDOR'].includes(user.role)
-      ? '/vendor'
-      : '/account'
-  const response = NextResponse.redirect(new URL(destination, request.url), 303)
-  const cookieOptions = {
-    httpOnly: true,
-    sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-  }
-  response.cookies.set('session_user_id', user.id, cookieOptions)
-  response.cookies.set('session', user.id, cookieOptions)
-  return response
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/db";
+import { createSession } from "@/lib/session";
+const schema = z.object({ email: z.string().email(), password: z.string().min(1) });
+export async function POST(req: Request) {
+  const parsed = schema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Enter a valid email and password." }, { status: 400 });
+  const user = await prisma.user.findUnique({ where: { email: parsed.data.email.toLowerCase().trim() } });
+  if (!user || !user.active || !(await bcrypt.compare(parsed.data.password, user.passwordHash))) return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+  await createSession({ id: user.id, role: user.role, email: user.email, name: user.name });
+  return NextResponse.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role } });
 }

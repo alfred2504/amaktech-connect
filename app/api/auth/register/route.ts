@@ -1,19 +1,18 @@
-import bcrypt from 'bcryptjs'
-import { randomUUID } from 'crypto'
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-
-export async function POST(request: Request) {
-  const formData = await request.formData()
-  const name = String(formData.get('name') || '').trim()
-  const email = String(formData.get('email') || '').trim().toLowerCase()
-  const password = String(formData.get('password') || '')
-  if (!name || !email || password.length < 8) return NextResponse.redirect(new URL('/register?error=invalid', request.url), 303)
-  const role = await prisma.$queryRawUnsafe<Array<{ id: string }>>('SELECT id FROM public."Role" WHERE name = $1 AND "deletedAt" IS NULL LIMIT 1', 'Customer')
-  if (!role[0]) return NextResponse.redirect(new URL('/register?error=setup', request.url), 303)
-  const hash = await bcrypt.hash(password, 12)
-  try {
-    await prisma.$executeRawUnsafe(`INSERT INTO public."User" (id, name, email, password, "isActive", "roleId", "createdAt", "updatedAt") VALUES ($1::uuid, $2, $3, $4, TRUE, $5::uuid, NOW(), NOW())`, randomUUID(), name, email, hash, role[0].id)
-  } catch { return NextResponse.redirect(new URL('/register?error=exists', request.url), 303) }
-  return NextResponse.redirect(new URL('/login?registered=1', request.url), 303)
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/db";
+import { createSession } from "@/lib/session";
+const schema = z.object({ name: z.string().min(2).max(100), email: z.string().email().max(200), password: z.string().min(8).max(128), phone: z.string().max(30).optional() });
+export async function POST(req: Request) {
+  const parsed = schema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Please provide valid registration details. Password must be at least 8 characters." }, { status: 400 });
+  const { name, email, password, phone } = parsed.data;
+  const normalized = email.toLowerCase().trim();
+  const exists = await prisma.user.findUnique({ where: { email: normalized } });
+  if (exists) return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
+  const passwordHash = await bcrypt.hash(password, 12);
+  const user = await prisma.user.create({ data: { name, email: normalized, passwordHash, phone }, select: { id: true, name: true, email: true, role: true } });
+  await createSession(user);
+  return NextResponse.json({ user }, { status: 201 });
 }
