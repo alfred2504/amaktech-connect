@@ -1,29 +1,44 @@
 # AmakTech Connect
+A Next.js full-stack marketplace starter using AmakTech green/gold branding. The catalog is database-driven; the starter seeds categories only and does not ship a hardcoded product catalog.
 
-Production-oriented e-commerce MVP for AmakTech Solutions: customer accounts, catalog, cart, checkout, orders, inventory, addresses, reviews, admin dashboard, RBAC-ready data model and Supabase-ready storage.
+## Prerequisites
+- Node.js 20+
+- PostgreSQL database (Supabase PostgreSQL works)
 
 ## Setup
-1. Copy `.env.example` to `.env` and fill values. Never commit secrets.
-2. `npm install`
-3. `npx prisma generate`
-4. For a new database: `npx prisma migrate dev --name init` then `npm run db:seed`.
-5. For an existing database, inspect migration state first; do **not** run `prisma migrate reset`.
-6. `npm run dev`
+1. Copy `.env.example` to `.env` and set `DATABASE_URL` and a long random `ADMIN_API_TOKEN`.
+2. Install: `npm install`
+3. Generate Prisma client: `npm run db:generate`
+4. Apply schema: `npx prisma db push` (or use `npm run db:migrate` for migrations)
+5. Seed categories: `npm run db:seed`
+6. Run locally: `npm run dev`
+7. Visit `http://localhost:3000`; admin catalog management is at `/admin`.
 
-Default seeded admin: `admin@amaktech.co.zw` / `ChangeMe123!` — change immediately.
+## Included functionality
+- Responsive storefront and category navigation
+- DB-driven category/product listing and search
+- Category filter and sort controls
+- Dynamic product detail pages
+- Local-storage cart with quantity/removal controls
+- Prisma PostgreSQL schema and category seed
+- Token-protected category and product creation API routes
+- Admin UI for adding categories and products
 
-## Included
-- Responsive storefront
-- Search/filter/sort catalog
-- Product details and reviews
-- Registration/login/logout with signed HTTP-only cookie
-- Customer account and order history
-- Address management
-- Server-side cart and checkout
-- Transactional stock reservation and inventory transactions
-- Admin product/category/brand/order management
-- Role/permission schema and authorization helper
-- Supabase Storage upload helper
-- Seed data
+## API
+- `GET /api/categories`
+- `GET /api/products?q=search&category=slug`
+- `POST /api/admin/categories` (header `x-admin-token`)
+- `POST /api/admin/products` (header `x-admin-token`)
 
-Payment is deliberately implemented as a safe COD/manual-payment flow. Connect a real Zimbabwe payment provider only after obtaining merchant credentials and implementing its verified webhook/signature flow.
+## Important implementation status
+This is a working project foundation, not a production-ready marketplace. Authentication, seller onboarding and dashboards, order management, payment-provider integrations, shipping calculations, reviews, refund workflows, image-upload service, inventory reservations, and checkout are not implemented yet. Checkout in the cart currently displays an explicit not-enabled notice. Before production, replace the simple admin token with proper authenticated roles, validate and rate-limit all API routes, review security, configure storage, and complete payment integrations.
+
+## Expanded marketplace backend (in progress)
+The database schema has been expanded to include users/roles, addresses, sellers and seller approval status, order/order-item records, payment records, wishlist, reviews, coupons, payouts, notifications, and audit logs. Additional API endpoints now exist for:
+- `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me` (signed HTTP-only session cookie)
+- `GET /api/orders`, `POST /api/orders` (authenticated checkout order creation; payment remains pending and is not processed by a gateway)
+- `POST /api/seller/apply` (seller application, pending admin approval)
+- `GET/POST/DELETE /api/wishlist`
+- `GET/POST /api/reviews` (reviews require delivered order and are pending moderation)
+
+This is still an implementation-in-progress and must be reviewed, installed, schema-validated, and tested before deployment. Checkout creates a pending order; it does not charge cards or trigger EcoCash/InnBucks. Seller approval and admin moderation screens, customer-facing checkout forms, complete seller/admin dashboards, upload service, notification delivery, and provider payment integrations remain to be built.
