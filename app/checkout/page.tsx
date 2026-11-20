@@ -1,36 +1,278 @@
+'use client'
+
 import Link from 'next/link'
-import { requireUser } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { money } from '@/lib/utils'
+import { useRouter } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
 
-export const dynamic = 'force-dynamic'
+type CartItem = {
+  id: string
+  name: string
+  price: number
+  currency: string
+  imageUrl?: string
+  slug: string
+  quantity: number
+}
 
-const fallbackColors = { primary_color: '#050505', accent_color: '#f6c900', brand_color: '#319b19' }
+type Address = {
+  id: string
+  label: string | null
+  fullName: string
+  phone: string
+  street: string
+  city: string
+  province: string | null
+  country: string
+  postalCode: string | null
+  isDefault: boolean
+}
 
-export default async function CheckoutPage() {
-  const user = await requireUser()
-  const [items, settings] = await Promise.all([
-    prisma.$queryRawUnsafe<Array<{ name: string; quantity: number; unitPrice: number }>>('SELECT p.name, ci.quantity, ci."unitPrice" FROM public."CartItem" ci JOIN public."Cart" c ON c.id = ci."cartId" JOIN public."Product" p ON p.id = ci."productId" WHERE c."userId" = $1::uuid AND c."deletedAt" IS NULL ORDER BY ci."createdAt" DESC', user.id),
-    prisma.$queryRawUnsafe<Array<{ key: string; value: string }>>('SELECT key,value FROM public."Setting" WHERE key IN ($1,$2,$3) AND "deletedAt" IS NULL', 'primary_color', 'accent_color', 'brand_color'),
-  ])
-  if (!items.length) return <main className="checkout-shell" style={{ '--ink': fallbackColors.primary_color, '--gold': fallbackColors.accent_color, '--green': fallbackColors.brand_color } as React.CSSProperties}><div className="checkout-container empty-checkout"><Link href="/products" className="checkout-logo"><span>AmakTech</span> <b>Connect</b></Link><h1>Your cart is empty</h1><p>Add something you love before checking out.</p><Link className="checkout-button" href="/products">Browse products</Link></div></main>
+const paymentMethods = [
+  ['CASH_ON_DELIVERY', 'Cash on delivery'],
+  ['ECOCASH', 'EcoCash'],
+  ['INNBUCKS', 'InnBucks'],
+  ['BANK_TRANSFER', 'Bank transfer'],
+  ['CARD', 'Card'],
+] as const
 
-  const colors = settings.reduce<Record<string, string>>((values, setting) => ({ ...values, [setting.key]: setting.value }), fallbackColors)
-  const subtotal = items.reduce((sum, item) => sum + Number(item.unitPrice) * item.quantity, 0)
-  const shipping = 0
-  const total = subtotal + shipping
+function formatMoney(value: number) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
+}
 
-  return <main className="checkout-shell" style={{ '--ink': colors.primary_color, '--gold': colors.accent_color, '--green': colors.brand_color } as React.CSSProperties}>
-    <header className="checkout-header"><div className="checkout-container checkout-nav"><Link href="/" className="checkout-logo"><span>AmakTech</span> <b>Connect</b></Link><div className="checkout-secure"><span>✓</span> Secure checkout</div><Link href="/cart" className="back-cart">← Back to cart</Link></div></header>
-    <div className="checkout-container checkout-content">
-      <div className="checkout-top"><div><p className="checkout-kicker">AmakTech Connect</p><h1>Complete your order</h1><p>Almost there, {user.name}. Tell us where to deliver your order.</p></div><div className="checkout-steps"><span className="done">1</span><i></i><span className="active">2</span><i></i><span>3</span><small>Cart&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Delivery&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Confirmation</small></div></div>
+export default function CheckoutPage() {
+  const router = useRouter()
+  const [items, setItems] = useState<CartItem[]>([])
+  const [addresses, setAddresses] = useState<Address[]>([])
+  const [addressId, setAddressId] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState<(typeof paymentMethods)[number][0]>('CASH_ON_DELIVERY')
+  const [notes, setNotes] = useState('')
+  const [couponCode, setCouponCode] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null)
+  const [checkoutKey, setCheckoutKey] = useState('')
+  const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+
+  const subtotal = useMemo(
+    () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [items],
+  )
+
+  useEffect(() => {
+    let active = true
+    async function loadCheckout() {
+      try {
+        const sessionResponse = await fetch('/api/auth/me')
+        const sessionData = await sessionResponse.json()
+        if (!sessionResponse.ok || !sessionData.user) {
+          router.replace('/login?next=%2Fcheckout')
+          return
+        }
+
+        const storedCart: unknown = JSON.parse(localStorage.getItem('amaktech-cart') || '[]')
+        const cart = Array.isArray(storedCart)
+          ? storedCart.filter((item): item is CartItem =>
+            item && typeof item.id === 'string' &&
+            typeof item.name === 'string' &&
+            typeof item.price === 'number' &&
+            Number.isFinite(item.price) &&
+            typeof item.quantity === 'number' &&
+            Number.isInteger(item.quantity) &&
+            item.quantity > 0,
+          )
+          : []
+
+        const addressResponse = await fetch('/api/account/addresses')
+        if (!addressResponse.ok) throw new Error('Unable to load your delivery addresses.')
+        const savedAddresses = await addressResponse.json() as Address[]
+
+        if (!active) return
+        setItems(cart)
+        setAddresses(savedAddresses)
+        setAddressId(savedAddresses.find(address => address.isDefault)?.id ?? savedAddresses[0]?.id ?? '')
+
+        const savedKey = sessionStorage.getItem('amaktech_checkout_key')
+        const key = savedKey || crypto.randomUUID()
+        if (!savedKey) sessionStorage.setItem('amaktech_checkout_key', key)
+        setCheckoutKey(key)
+      } catch (loadError) {
+        if (active) setError(loadError instanceof Error ? loadError.message : 'Unable to load checkout.')
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+
+    void loadCheckout()
+    return () => { active = false }
+  }, [router])
+
+  async function applyCoupon() {
+    setError('')
+    setMessage('')
+    setAppliedCoupon(null)
+    if (!couponCode.trim()) return
+
+    const response = await fetch('/api/coupons/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: couponCode.trim(), subtotal }),
+    })
+    const result = await response.json()
+    if (!response.ok) {
+      setError(result.error || 'Coupon could not be applied.')
+      return
+    }
+    setAppliedCoupon({ code: result.code, discount: Number(result.discount) })
+    setCouponCode(result.code)
+    setMessage('Coupon applied. The final discount will be verified when the order is placed.')
+  }
+
+  async function placeOrder(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('')
+    setMessage('')
+    if (!items.length) {
+      setError('Your cart is empty.')
+      return
+    }
+    if (!addressId) {
+      setError('Add a delivery address before placing your order.')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          checkoutKey,
+          addressId,
+          paymentMethod,
+          couponCode: appliedCoupon?.code,
+          notes: notes.trim() || undefined,
+          items: items.map(item => ({ productId: item.id, quantity: item.quantity })),
+        }),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Unable to place your order.')
+
+      localStorage.removeItem('amaktech-cart')
+      sessionStorage.removeItem('amaktech_checkout_key')
+      router.push(`/account/orders/${result.order.id}`)
+      router.refresh()
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'Unable to place your order.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (loading) return <main className="container section"><p>Loading checkout…</p></main>
+  if (error && !items.length) {
+    return <main className="container section"><h1>Checkout</h1><p role="alert">{error}</p><Link className="button primary" href="/cart">Return to cart</Link></main>
+  }
+  if (!items.length) {
+    return <main className="container section"><h1>Your cart is empty</h1><Link className="button primary" href="/shop">Browse products</Link></main>
+  }
+
+  return (
+    <main className="container section checkout-page">
+      <Link href="/cart" className="checkout-back">← Back to cart</Link>
+      <h1>Complete your order</h1>
+      <p className="muted">Choose delivery and payment preferences. Payment remains pending until verified.</p>
       <div className="checkout-grid">
-        <form className="delivery-card" method="post" action="/api/orders"><div className="card-heading"><span className="step-number">2</span><div><h2>Delivery details</h2><p>Where should we send your order?</p></div></div><div className="field-grid"><label>First name<input name="firstName" autoComplete="given-name" required /></label><label>Last name<input name="lastName" autoComplete="family-name" required /></label></div><label>Street address<input name="line1" autoComplete="street-address" placeholder="House number and street name" required /></label><div className="field-grid"><label>City<input name="city" autoComplete="address-level2" required /></label><label>State / Province<input name="state" autoComplete="address-level1" required /></label></div><div className="field-grid"><label>Postal code<input name="postalCode" autoComplete="postal-code" required /></label><label>Country<input name="country" autoComplete="country-name" required /></label></div><button className="checkout-button" type="submit">Place order <span>→</span></button><p className="form-footnote">By placing your order, you agree to our terms and privacy policy.</p></form>
-        <aside className="summary-card"><div className="card-heading"><div><h2>Order summary</h2><p>{items.reduce((sum, item) => sum + item.quantity, 0)} items in your bag</p></div><Link href="/cart">Edit</Link></div><div className="summary-items">{items.map((item, index) => <div className="summary-item" key={`${item.name}-${index}`}><div className="summary-thumb">{item.name.slice(0, 1)}</div><div><strong>{item.name}</strong><small>Qty {item.quantity}</small></div><b>{money(Number(item.unitPrice) * item.quantity)}</b></div>)}</div><div className="summary-lines"><div><span>Subtotal</span><b>{money(subtotal)}</b></div><div><span>Shipping</span><b>{shipping ? money(shipping) : 'Free'}</b></div><div className="summary-total"><span>Total</span><b>{money(total)}</b></div></div></aside>
+        <form className="checkout-form" onSubmit={placeOrder}>
+          <section className="checkout-panel">
+            <h2>Delivery address</h2>
+            {addresses.length ? (
+              <div className="checkout-addresses">
+                {addresses.map(address => (
+                  <label className="checkout-address" key={address.id}>
+                    <input
+                      type="radio"
+                      name="addressId"
+                      value={address.id}
+                      checked={addressId === address.id}
+                      onChange={() => setAddressId(address.id)}
+                    />
+                    <span>
+                      <strong>{address.label || address.fullName}</strong>
+                      <small>{address.fullName} · {address.phone}</small>
+                      <small>{address.street}, {address.city}, {address.country}</small>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <p>Add a delivery address to continue. <Link href="/account/addresses">Manage addresses</Link></p>
+            )}
+            {addresses.length > 0 && <Link href="/account/addresses">Add or edit addresses</Link>}
+          </section>
+
+          <section className="checkout-panel">
+            <h2>Payment method</h2>
+            <label className="checkout-field">
+              <span>Select payment method</span>
+              <select value={paymentMethod} onChange={event => setPaymentMethod(event.target.value as typeof paymentMethod)}>
+                {paymentMethods.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+              </select>
+            </label>
+            <p className="checkout-note">Submitting an order does not confirm payment. Prepaid methods remain pending until verified; cash on delivery is also confirmed separately.</p>
+            <label className="checkout-field">
+              <span>Order notes (optional)</span>
+              <textarea value={notes} onChange={event => setNotes(event.target.value)} maxLength={500} rows={3} />
+            </label>
+          </section>
+
+          <section className="checkout-panel">
+            <h2>Promotion code</h2>
+            <div className="checkout-coupon">
+              <input value={couponCode} onChange={event => setCouponCode(event.target.value.toUpperCase())} maxLength={30} aria-label="Coupon code" />
+              <button type="button" className="button secondary" onClick={applyCoupon}>Apply</button>
+            </div>
+          </section>
+
+          {error && <p className="form-error" role="alert">{error}</p>}
+          {message && <p role="status">{message}</p>}
+          <button className="button primary" type="submit" disabled={submitting || !addressId || !checkoutKey}>
+            {submitting ? 'Placing order…' : 'Place order'}
+          </button>
+        </form>
+
+        <aside className="checkout-panel checkout-summary">
+          <h2>Order summary</h2>
+          {items.map(item => (
+            <div className="checkout-summary-item" key={item.id}>
+              <span>{item.name} × {item.quantity}</span>
+              <strong>{formatMoney(item.price * item.quantity)}</strong>
+            </div>
+          ))}
+          <div className="checkout-summary-total"><span>Subtotal</span><strong>{formatMoney(subtotal)}</strong></div>
+          {appliedCoupon && <div className="checkout-summary-total"><span>Coupon ({appliedCoupon.code})</span><strong>−{formatMoney(appliedCoupon.discount)}</strong></div>}
+          <p className="checkout-note">Shipping is calculated by the marketplace and verified when your order is created.</p>
+        </aside>
       </div>
-    </div>
-    <style>{`
-      .checkout-shell{min-height:100vh;background:#f7f5f5;color:var(--ink);font-family:Arial,Helvetica,sans-serif}.checkout-container{width:min(1180px,calc(100% - 40px));margin:0 auto}.checkout-header{background:#fff;border-top:6px solid var(--ink);border-bottom:1px solid #e8e3e4}.checkout-nav{min-height:88px;display:flex;align-items:center;gap:30px}.checkout-logo{font-size:28px;font-weight:950;letter-spacing:-1.5px}.checkout-logo span{color:var(--green)}.checkout-logo b{color:var(--gold)}.checkout-secure{margin:auto;color:#6d696b;font-size:13px}.checkout-secure span{display:inline-grid;place-items:center;width:22px;height:22px;background:var(--green);color:#fff;border-radius:50%;margin-right:7px;font-weight:700}.back-cart{font-size:14px;font-weight:700}.back-cart:hover{color:var(--green)}.checkout-content{padding:58px 0 80px}.checkout-top{display:flex;justify-content:space-between;align-items:end;gap:30px;margin-bottom:38px}.checkout-kicker{color:var(--green);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin:0 0 12px}.checkout-top h1{font-size:clamp(38px,5vw,62px);line-height:1;letter-spacing:-3px;margin:0 0 13px}.checkout-top p:not(.checkout-kicker){color:#716c6e;margin:0}.checkout-steps{display:grid;grid-template-columns:28px 48px 28px 48px 28px;align-items:center;position:relative;padding-bottom:25px}.checkout-steps span{width:28px;height:28px;border:1px solid #d5d0d1;border-radius:50%;display:grid;place-items:center;color:#777;font-size:12px;background:#fff}.checkout-steps span.done,.checkout-steps span.active{background:var(--green);color:#fff;border-color:var(--green)}.checkout-steps i{height:1px;background:#d5d0d1}.checkout-steps small{position:absolute;bottom:0;right:0;color:#777;font-size:10px;white-space:nowrap}.checkout-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,.75fr);gap:24px;align-items:start}.delivery-card,.summary-card{background:#fff;border:1px solid #e7e1e2;border-radius:16px;padding:30px}.card-heading{display:flex;align-items:center;gap:14px;margin-bottom:26px}.card-heading h2{font-size:22px;margin:0 0 5px}.card-heading p{color:#777;margin:0;font-size:14px}.card-heading a{margin-left:auto;color:var(--green);font-size:13px;font-weight:700}.step-number{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--gold);font-weight:800}.delivery-card>label,.field-grid label{display:grid;gap:8px;color:#373335;font-size:13px;font-weight:700;margin-bottom:18px}.delivery-card input{width:100%;padding:14px 15px;border:1px solid #d9d3d4;border-radius:8px;background:#fff;color:var(--ink);font:inherit;outline-color:var(--green)}.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.checkout-button{display:flex;justify-content:center;align-items:center;gap:20px;width:100%;border:0;border-radius:999px;background:var(--ink);color:#fff;padding:16px;font:inherit;font-weight:800;cursor:pointer;margin-top:7px}.checkout-button:hover{background:var(--green)}.checkout-button span{color:var(--gold);font-size:20px}.form-footnote{text-align:center;color:#888;font-size:11px;line-height:1.4;margin:16px 0 0}.summary-card{background:var(--ink);color:#fff;border:0}.summary-card .card-heading p{color:#aaa}.summary-card .card-heading h2{color:#fff}.summary-card .card-heading a{color:var(--gold)}.summary-items{display:grid;gap:17px;padding:5px 0 24px;border-bottom:1px solid #333}.summary-item{display:grid;grid-template-columns:42px 1fr auto;gap:12px;align-items:center}.summary-thumb{height:42px;width:42px;background:var(--green);color:#fff;border-radius:8px;display:grid;place-items:center;font-size:20px;font-weight:900}.summary-item strong,.summary-item small{display:block}.summary-item strong{font-size:13px}.summary-item small{color:#aaa;font-size:12px;margin-top:5px}.summary-item>b{font-size:13px}.summary-lines{display:grid;gap:15px;padding-top:22px}.summary-lines div{display:flex;justify-content:space-between;color:#bbb;font-size:14px}.summary-lines b{color:#fff}.summary-total{border-top:1px solid #333;padding-top:20px;margin-top:5px;font-size:19px!important;color:#fff!important}.summary-total b{color:var(--gold)}.empty-checkout{padding:80px 0}.empty-checkout h1{font-size:52px;letter-spacing:-2px}.empty-checkout p{color:#716c6e}@media(max-width:800px){.checkout-top{display:block}.checkout-steps{margin-top:34px;width:290px}.checkout-grid{grid-template-columns:1fr}.summary-card{order:-1}}@media(max-width:560px){.checkout-container{width:calc(100% - 28px)}.checkout-nav{min-height:100px;flex-wrap:wrap;padding:20px 0;gap:14px}.checkout-secure{margin:0 0 0 auto}.back-cart{width:100%}.checkout-content{padding-top:35px}.delivery-card,.summary-card{padding:22px}.field-grid{grid-template-columns:1fr}.checkout-top h1{letter-spacing:-2px}}
-    `}</style>
-  </main>
+      <style>{`
+        .checkout-back{display:inline-block;margin-bottom:18px;color:#319b19;font-weight:700}
+        .checkout-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr);gap:24px;align-items:start}
+        .checkout-form{display:grid;gap:18px}
+        .checkout-panel{background:#fff;border:1px solid #e6e1e2;border-radius:14px;padding:24px}
+        .checkout-panel h2{margin:0 0 18px;font-size:21px}
+        .checkout-addresses{display:grid;gap:12px;margin-bottom:14px}
+        .checkout-address{display:flex;gap:12px;padding:14px;border:1px solid #e4dfe0;border-radius:10px;cursor:pointer}
+        .checkout-address span,.checkout-address small{display:block}
+        .checkout-address small{margin-top:5px;color:#706b6d}
+        .checkout-field{display:grid;gap:8px;margin:12px 0}
+        .checkout-field input,.checkout-field select,.checkout-field textarea,.checkout-coupon input{width:100%;padding:12px;border:1px solid #d8d2d3;border-radius:8px;font:inherit}
+        .checkout-note{color:#706b6d;font-size:13px;line-height:1.5}
+        .checkout-coupon{display:flex;gap:10px}
+        .checkout-summary{position:sticky;top:20px}
+        .checkout-summary-item,.checkout-summary-total{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid #eee}
+        .checkout-summary-total{font-weight:700}
+        @media(max-width:760px){.checkout-grid{grid-template-columns:1fr}.checkout-summary{position:static;order:-1}}
+      `}</style>
+    </main>
+  )
 }

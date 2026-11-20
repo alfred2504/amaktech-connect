@@ -1,7 +1,61 @@
-import Link from 'next/link'
-import { requireAdmin } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { money } from '@/lib/utils'
+'use client'
+
+import { useEffect, useState } from 'react'
 import { AdminShell } from '@/components/AdminShell'
 
-export default async function AdminProducts() { await requireAdmin(); const products = await prisma.$queryRawUnsafe<Array<{id:string;name:string;slug:string;price:number;isActive:boolean;category:string}>>('SELECT p.id,p.name,p.slug,p.price,p."isActive",c.name AS category FROM public."Product" p JOIN public."Category" c ON c.id=p."categoryId" WHERE p."deletedAt" IS NULL ORDER BY p."createdAt" DESC'); return <AdminShell title="Products" description="Keep your storefront collection clear, current, and ready to sell."><div className="admin-toolbar"><p>Catalogue overview</p><Link className="admin-button" href="/products">View storefront</Link></div><div className="admin-product-grid">{products.map(product=><div className="admin-product-card" key={product.id}><div><p className="admin-kicker">{product.category}</p><h2>{product.name}</h2><strong>{money(product.price)}</strong></div><span className={product.isActive?'admin-active':'admin-inactive'}>{product.isActive?'Active':'Inactive'}</span></div>)}</div></AdminShell> }
+type Product = {
+  id: string
+  name: string
+  price: string | number
+  stock: number
+  status: string
+  category: { name: string }
+  seller: { storeName: string; status: string }
+  images: Array<{ url: string; alt: string | null }>
+}
+
+export default function AdminProductsPage() {
+  const [products, setProducts] = useState<Product[]>([])
+  const [error, setError] = useState('')
+
+  async function load() {
+    const response = await fetch('/api/admin/products')
+    const result = await response.json()
+    if (!response.ok) throw new Error(result.error || 'Unable to load products.')
+    setProducts(result)
+  }
+
+  useEffect(() => {
+    load().catch(loadError => setError(loadError instanceof Error ? loadError.message : 'Unable to load products.'))
+  }, [])
+
+  async function moderate(productId: string, action: 'APPROVE' | 'REJECT' | 'ARCHIVE') {
+    setError('')
+    const response = await fetch('/api/admin/products', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId, action }),
+    })
+    const result = await response.json()
+    if (!response.ok) {
+      setError(result.error || 'Product moderation failed.')
+      return
+    }
+    await load()
+  }
+
+  return (
+    <AdminShell title="Product moderation" description="Review seller products before they appear in the marketplace.">
+      {error && <p className="form-error" role="alert">{error}</p>}
+      {products.map(product => <article className="admin-order-row" key={product.id}>
+        {product.images[0] && <img src={product.images[0].url} alt={product.images[0].alt || product.name} width={72} height={72} />}
+        <span><strong>{product.name}</strong><small>{product.seller.storeName} · {product.category.name}</small><small>${Number(product.price).toFixed(2)} · Stock {product.stock} · {product.status}</small></span>
+        {product.status === 'DRAFT' && <span className="admin-actions">
+          <button onClick={() => moderate(product.id, 'APPROVE')}>Approve</button>
+          <button onClick={() => moderate(product.id, 'REJECT')}>Reject</button>
+        </span>}
+        {product.status === 'ACTIVE' && <button onClick={() => moderate(product.id, 'ARCHIVE')}>Archive</button>}
+      </article>)}
+    </AdminShell>
+  )
+}

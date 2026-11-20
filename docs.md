@@ -1,10 +1,11 @@
-# Production checklist
+# Production readiness checklist
 
-- Rotate any credentials previously pasted into chat/terminals.
-- Configure Supabase Storage bucket `products` as appropriate.
-- Use `DATABASE_URL` on transaction pooler 6543 for app runtime and `DIRECT_URL` on session/direct 5432 for Prisma migrations.
-- Do not reset production DB. Establish/inspect migration history before deploying schema changes.
-- Add verified payment gateway webhooks before accepting online payments.
-- Configure email verification/password reset with Resend.
-- Add rate limiting, CAPTCHA where needed, security headers, monitoring, backups and CI.
-- Add vendor/store models before enabling multi-vendor sales.
+- Review the replacement Prisma schema against the existing database, back up production, and prepare a reviewed migration plan before applying schema changes.
+- Keep `DATABASE_URL` for pooled application traffic and `DIRECT_URL` for direct Prisma schema operations.
+- Set a unique `BETTER_AUTH_SECRET` of at least 32 characters and keep all service credentials server-side.
+- Configure and verify Supabase Storage bucket `products` before enabling image uploads.
+- Configure Resend (`RESEND_API_KEY`, `EMAIL_FROM`, and `NEXT_PUBLIC_APP_URL`) before enabling password reset emails.
+- Integrate and verify payment-provider callbacks before treating online payments as paid. Current checkout does not charge cards or initiate EcoCash/InnBucks.
+- Configure actual shipping rates and carrier integrations; current shipment and seller-fulfillment statuses are operational records.
+- Add rate limiting, security headers, monitoring, backups, and CI before production.
+- Test role-based access, order cancellation/restocking, coupon limits, and payment verification against a non-production database.

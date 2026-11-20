@@ -1,2 +1,30 @@
-import Link from 'next/link'; import {requireAdmin} from '@/lib/auth'; import {prisma} from '@/lib/prisma'; import {money} from '@/lib/utils'; import {AdminShell} from '@/components/AdminShell';
-export default async function AdminOrders(){await requireAdmin();const os=await prisma.$queryRawUnsafe<Array<{id:string;name:string;total:number;status:string}>>('SELECT o.id, u.name, o.total, o.status FROM public."Order" o JOIN public."User" u ON u.id = o."userId" WHERE o."deletedAt" IS NULL ORDER BY o."createdAt" DESC');return <AdminShell title="Orders" description="Review every purchase and keep fulfilment on track."><section className="admin-section admin-list">{os.map(o=><Link className="admin-order-row" href={`/admin/orders/${o.id}`} key={o.id}><span><strong>Order {o.id.slice(0,8)}</strong><small>{o.name}</small></span><span className="admin-order-status">{o.status}</span><strong>{money(o.total)}</strong></Link>)}</section></AdminShell>}
+import Link from 'next/link';
+import { requireAdmin } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { money } from '@/lib/utils';
+import { AdminShell } from '@/components/AdminShell';
+
+export default async function AdminOrders() {
+  await requireAdmin();
+  const orders = await prisma.order.findMany({
+    include: { user: { select: { name: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return (
+    <AdminShell title="Orders" description="Review every purchase and keep fulfilment on track.">
+      <section className="admin-section admin-list">
+        {orders.map(order => (
+          <Link className="admin-order-row" href={`/admin/orders/${order.id}`} key={order.id}>
+            <span>
+              <strong>Order {order.id.slice(0, 8)}</strong>
+              <small>{order.user.name}</small>
+            </span>
+            <span className="admin-order-status">{order.status}</span>
+            <strong>{money(Number(order.total))}</strong>
+          </Link>
+        ))}
+      </section>
+    </AdminShell>
+  );
+}

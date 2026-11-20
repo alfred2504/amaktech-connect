@@ -1,44 +1,40 @@
 # AmakTech Connect
-A Next.js full-stack marketplace starter using AmakTech green/gold branding. The catalog is database-driven; the starter seeds categories only and does not ship a hardcoded product catalog.
 
-## Prerequisites
-- Node.js 20+
-- PostgreSQL database (Supabase PostgreSQL works)
+AmakTech Connect is a multi-seller marketplace built with Next.js, Prisma, and PostgreSQL.
 
-## Setup
-1. Copy `.env.example` to `.env` and set `DATABASE_URL` and a long random `ADMIN_API_TOKEN`.
-2. Install: `npm install`
-3. Generate Prisma client: `npm run db:generate`
-4. Apply schema: `npx prisma db push` (or use `npm run db:migrate` for migrations)
-5. Seed categories: `npm run db:seed`
-6. Run locally: `npm run dev`
-7. Visit `http://localhost:3000`; admin catalog management is at `/admin`.
+## Local setup
 
-## Included functionality
-- Responsive storefront and category navigation
-- DB-driven category/product listing and search
-- Category filter and sort controls
-- Dynamic product detail pages
-- Local-storage cart with quantity/removal controls
-- Prisma PostgreSQL schema and category seed
-- Token-protected category and product creation API routes
-- Admin UI for adding categories and products
+Requirements: Node.js 20+ and PostgreSQL.
 
-## API
-- `GET /api/categories`
-- `GET /api/products?q=search&category=slug`
-- `POST /api/admin/categories` (header `x-admin-token`)
-- `POST /api/admin/products` (header `x-admin-token`)
+1. Copy `.env.example` to `.env` and set the database URLs and a random `BETTER_AUTH_SECRET` of at least 32 characters.
+2. Install dependencies with `npm install`.
+3. Generate the Prisma client with `npm run db:generate`.
+4. Apply the schema only after reviewing its diff and backing up the database. For a new development database, `npx prisma db push` can create the tables.
+5. Seed categories with `npm run db:seed`.
+6. Start the app with `npm run dev`.
 
-## Important implementation status
-This is a working project foundation, not a production-ready marketplace. Authentication, seller onboarding and dashboards, order management, payment-provider integrations, shipping calculations, reviews, refund workflows, image-upload service, inventory reservations, and checkout are not implemented yet. Checkout in the cart currently displays an explicit not-enabled notice. Before production, replace the simple admin token with proper authenticated roles, validate and rate-limit all API routes, review security, configure storage, and complete payment integrations.
+Use the pooled `DATABASE_URL` for runtime traffic and the direct `DIRECT_URL` for Prisma schema operations. Do not push this replacement schema to a production database without reviewing destructive changes and the migration plan.
 
-## Expanded marketplace backend (in progress)
-The database schema has been expanded to include users/roles, addresses, sellers and seller approval status, order/order-item records, payment records, wishlist, reviews, coupons, payouts, notifications, and audit logs. Additional API endpoints now exist for:
-- `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me` (signed HTTP-only session cookie)
-- `GET /api/orders`, `POST /api/orders` (authenticated checkout order creation; payment remains pending and is not processed by a gateway)
-- `POST /api/seller/apply` (seller application, pending admin approval)
-- `GET/POST/DELETE /api/wishlist`
-- `GET/POST /api/reviews` (reviews require delivered order and are pending moderation)
+## Included workflows
 
-This is still an implementation-in-progress and must be reviewed, installed, schema-validated, and tested before deployment. Checkout creates a pending order; it does not charge cards or trigger EcoCash/InnBucks. Seller approval and admin moderation screens, customer-facing checkout forms, complete seller/admin dashboards, upload service, notification delivery, and provider payment integrations remain to be built.
+- Database-backed customer accounts and signed HTTP-only sessions
+- Product catalog, cart, checkout, address management, order history, and wishlist
+- Idempotent checkout with server-side price, discount, stock, and commission calculations
+- Seller onboarding, product editing/moderation, store profile, order fulfillment, and payout requests
+- Account-protected administration for categories, customers, sellers, products, orders, reviews, coupons, payments, shipments, and payouts
+- Customer reviews, notifications, and payment-reference submission
+- Optional Supabase Storage uploads and Resend password-reset emails
+
+## Integration limits
+
+Checkout records orders but does not charge a card or call EcoCash/InnBucks. Manual payment references require administrator verification; cash-on-delivery orders have a separate confirmation action. Payout records track manual operations and do not transfer money. Configure payment providers, shipping rates, email delivery, storage, and operational safeguards before production use.
+
+Supabase uploads require a `products` bucket and a server-only `SUPABASE_SERVICE_ROLE_KEY`; never expose that key to the browser. Password reset email requires `RESEND_API_KEY`, `EMAIL_FROM`, and `NEXT_PUBLIC_APP_URL`.
+
+## Useful commands
+
+- `npm run db:generate` — generate the Prisma client
+- `npx prisma validate` — validate the schema
+- `npm run db:seed` — upsert marketplace categories
+- `npm run lint` — lint the configured project paths
+- `npm run build` — generate Prisma client and create a production build

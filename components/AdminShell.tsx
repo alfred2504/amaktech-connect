@@ -17,9 +17,17 @@ export function AdminShell({
         <div className="admin-container admin-nav">
           <Link className="admin-logo" href="/"><span>AmakTech</span> <b>Connect</b></Link>
           <nav>
-            <Link href="/admin">Overview</Link>
+            <Link href="/admin/dashboard">Overview</Link>
+            <Link href="/admin/sellers">Sellers</Link>
             <Link href="/admin/products">Products</Link>
             <Link href="/admin/orders">Orders</Link>
+            <Link href="/admin/customers">Customers</Link>
+            <Link href="/admin/categories">Categories</Link>
+            <Link href="/admin/coupons">Coupons</Link>
+            <Link href="/admin/payments">Payments</Link>
+            <Link href="/admin/payouts">Payouts</Link>
+            <Link href="/admin/reviews">Reviews</Link>
+            <Link href="/admin/shipments">Shipments</Link>
             <Link href="/">Storefront</Link>
             <Link className="admin-logout" href="/logout">Log out</Link>
           </nav>
