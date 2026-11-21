@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import '../account.css'
 
 type Notification = { id: string; title: string; message: string; type: string; readAt: string | null; createdAt: string }
 
@@ -34,16 +35,20 @@ export default function NotificationsPage() {
   }
 
   return (
-    <main className="container section">
+    <main className="account-subpage">
+      <div className="container notifications-page">
       <h1>Notifications</h1>
       {error && <p className="form-error" role="alert">{error}</p>}
       {!notifications.length && !error && <p>You have no notifications.</p>}
+      <div className="notifications-list">
       {notifications.map(item => (
         <article className="seller-product-row" key={item.id}>
           <div><strong>{item.title}</strong><p>{item.message}</p><small>{new Date(item.createdAt).toLocaleString()}</small></div>
           {!item.readAt && <button onClick={() => markRead(item.id)}>Mark as read</button>}
         </article>
       ))}
+      </div>
+      </div>
     </main>
   )
 }

@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import '../account/account.css'
 
 type WishlistItem = {
   id: string
@@ -34,7 +35,7 @@ export default function WishlistPage() {
   }
 
   return (
-    <main className="container section">
+    <main className="container section wishlist-subpage">
       <h1>My wishlist</h1>
       {error && <p className="form-error" role="alert">{error}</p>}
       {!items.length && !error ? <p>Your wishlist is empty.</p> : (

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import '../account.css'
 
 type Address = {
   id: string
@@ -97,7 +98,8 @@ export default function AddressesPage() {
   }
 
   return (
-    <main className="container section">
+    <main className="account-subpage">
+      <div className="container">
       <h1>Delivery addresses</h1>
       {error && <p className="form-error" role="alert">{error}</p>}
       {message && <p role="status">{message}</p>}
@@ -128,6 +130,7 @@ export default function AddressesPage() {
         <label><input type="checkbox" checked={form.isDefault} onChange={event => update('isDefault', event.target.checked)} /> Set as default address</label>
         <div className="address-actions"><button className="button primary">{editingId ? 'Update address' : 'Save address'}</button>{editingId && <button type="button" onClick={() => { setEditingId(''); setForm(emptyAddress) }}>Cancel edit</button>}</div>
       </form>
+      </div>
     </main>
   )
 }
