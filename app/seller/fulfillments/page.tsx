@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { SellerShell } from '@/components/SellerShell'
 
 type Fulfillment = {
   id: string
@@ -50,12 +51,10 @@ export default function SellerFulfillmentsPage() {
   }
 
   return (
-    <main className="container section">
-      <h1>Fulfillment</h1>
-      <p className="muted">Update only your seller-specific part of each customer order.</p>
+    <SellerShell title="Fulfillment" description="Update the shipping progress for your part of each customer order.">
       {error && <p className="form-error" role="alert">{error}</p>}
       {message && <p role="status">{message}</p>}
-      {fulfillments.map(fulfillment => (
+      {fulfillments.length === 0 && !error ? <p className="seller-empty">No fulfillment tasks yet.</p> : fulfillments.map(fulfillment => (
         <article className="seller-product-row" key={fulfillment.id}>
           <div>
             <strong>Order {fulfillment.order.orderNumber} · {fulfillment.status}</strong>
@@ -71,6 +70,6 @@ export default function SellerFulfillmentsPage() {
           </button>}
         </article>
       ))}
-    </main>
+    </SellerShell>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { SellerShell } from '@/components/SellerShell'
 
 const emptyStore = {
   storeName: '',
@@ -75,9 +76,10 @@ export default function SellerStorePage() {
   }
 
   return (
-    <main className="container section">
-      <h1>Store settings</h1>
-      {loading ? <p>Loading store profile…</p> : <form className="seller-form-panel" onSubmit={save}>
+    <SellerShell title="Store profile" description="Manage the public details and business contact information for your store.">
+      {error && <p className="form-error" role="alert">{error}</p>}
+      {message && <p role="status">{message}</p>}
+      {loading ? <p>Loading store profile…</p> : <form className="admin-form" onSubmit={save}>
         <label>Store name<input required value={form.storeName} onChange={event => update('storeName', event.target.value)} /></label>
         <label>Description<textarea value={form.description} onChange={event => update('description', event.target.value)} /></label>
         <label>Logo URL<input type="url" value={form.logoUrl} onChange={event => update('logoUrl', event.target.value)} /></label>
@@ -95,10 +97,8 @@ export default function SellerStorePage() {
         <label>Business address<input value={form.businessAddress} onChange={event => update('businessAddress', event.target.value)} /></label>
         <label>Business phone<input value={form.businessPhone} onChange={event => update('businessPhone', event.target.value)} /></label>
         <label>Business email<input type="email" value={form.businessEmail} onChange={event => update('businessEmail', event.target.value)} /></label>
-        {error && <p className="form-error" role="alert">{error}</p>}
-        {message && <p role="status">{message}</p>}
         <button className="button primary">Save store profile</button>
       </form>}
-    </main>
+    </SellerShell>
   )
 }

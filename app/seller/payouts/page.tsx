@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { SellerShell } from '@/components/SellerShell'
 
 type Payout = { id: string; amount: string | number; method: string | null; status: string; createdAt: string }
 
@@ -44,19 +45,21 @@ export default function SellerPayoutsPage() {
   }
 
   return (
-    <main className="container section">
-      <h1>Seller payouts</h1>
-      <p>Available balance: <strong>${availableBalance}</strong></p>
-      <form className="seller-form-panel" onSubmit={requestPayout}>
+    <SellerShell title="Payouts" description="Request a payout and review previous transfers.">
+      <section className="seller-balance-card">
+        <p>Available balance</p>
+        <strong>${availableBalance}</strong>
+      </section>
+      <form className="admin-form" onSubmit={requestPayout}>
         <label>Amount<input type="number" min="0.01" step="0.01" required value={amount} onChange={event => setAmount(event.target.value)} /></label>
         <label>Payment method<input required maxLength={50} value={method} onChange={event => setMethod(event.target.value)} placeholder="Bank transfer, mobile wallet, etc." /></label>
         {error && <p className="form-error" role="alert">{error}</p>}
         {message && <p role="status">{message}</p>}
         <button className="button primary">Request payout</button>
       </form>
-      <section><h2>History</h2>{payouts.map(payout => <article className="seller-product-row" key={payout.id}>
-        <span>${Number(payout.amount).toFixed(2)} · {payout.method || '—'}</span><span>{payout.status}</span><small>{new Date(payout.createdAt).toLocaleDateString()}</small>
+      <section className="admin-section"><h2>History</h2>{payouts.length === 0 ? <p className="seller-empty">No payout requests yet.</p> : payouts.map(payout => <article className="admin-order-row" key={payout.id}>
+        <span><strong>${Number(payout.amount).toFixed(2)}</strong><small>{payout.method || '—'}</small></span><span className="admin-order-status">{payout.status}</span><small>{new Date(payout.createdAt).toLocaleDateString()}</small>
       </article>)}</section>
-    </main>
+    </SellerShell>
   )
 }

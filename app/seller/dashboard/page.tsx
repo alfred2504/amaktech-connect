@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { SellerShell } from '@/components/SellerShell'
 
 type Dashboard = {
   store: { storeName: string; status: string }
@@ -32,8 +33,15 @@ export default function SellerDashboardPage() {
       .catch(loadError => setError(loadError instanceof Error ? loadError.message : 'Unable to load seller dashboard.'))
   }, [])
 
-  if (error) return <main className="container section"><h1>Seller dashboard</h1><p role="alert">{error}</p><Link href="/seller/apply">Apply to sell</Link></main>
-  if (!data) return <main className="container section"><p>Loading seller dashboard…</p></main>
+  if (error) {
+    return (
+      <SellerShell title="Seller dashboard">
+        <p className="form-error" role="alert">{error}</p>
+        <Link className="seller-action-link" href="/seller/apply">Apply to sell</Link>
+      </SellerShell>
+    )
+  }
+  if (!data) return <SellerShell title="Seller dashboard"><p>Loading seller dashboard…</p></SellerShell>
 
   const cards = [
     ['Products', String(data.stats.productCount)],
@@ -45,16 +53,27 @@ export default function SellerDashboardPage() {
   ]
 
   return (
-    <main className="container section">
-      <header className="seller-header"><div><p className="eyebrow">SELLER DASHBOARD</p><h1>{data.store.storeName}</h1></div><span className={`status status-${data.store.status.toLowerCase()}`}>{data.store.status}</span></header>
+    <SellerShell
+      eyebrow="Seller dashboard"
+      title={data.store.storeName}
+      description="Your store performance and the tasks that need your attention."
+    >
       <div className="dashboard-grid">{cards.map(([label, value]) => <section className="dashboard-card" key={label}><p>{label}</p><strong>{value}</strong></section>)}</div>
-      <nav className="seller-actions">
-        <Link className="button secondary" href="/seller/products">Products</Link>
-        <Link className="button secondary" href="/seller/orders">Orders</Link>
-        <Link className="button secondary" href="/seller/fulfillments">Fulfillment</Link>
-        <Link className="button secondary" href="/seller/store">Store profile</Link>
-        <Link className="button secondary" href="/seller/payouts">Payouts</Link>
-      </nav>
-    </main>
+      <section className="seller-status-panel">
+        <span>Store status</span>
+        <strong className={`seller-status seller-status-${data.store.status.toLowerCase()}`}>{data.store.status}</strong>
+        <p>Your store status determines whether your products can be published.</p>
+      </section>
+      <section className="admin-section">
+        <h2>Quick links</h2>
+        <nav className="seller-dashboard-links" aria-label="Seller dashboard shortcuts">
+          <Link className="seller-action-link" href="/seller/products">Manage products</Link>
+          <Link className="seller-action-link" href="/seller/orders">View orders</Link>
+          <Link className="seller-action-link" href="/seller/fulfillments">Update fulfillment</Link>
+          <Link className="seller-action-link" href="/seller/store">Edit store profile</Link>
+          <Link className="seller-action-link" href="/seller/payouts">Manage payouts</Link>
+        </nav>
+      </section>
+    </SellerShell>
   )
 }

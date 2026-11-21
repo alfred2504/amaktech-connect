@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { SellerShell } from '@/components/SellerShell'
 
 type SellerOrderItem = {
   id: string
@@ -26,20 +27,22 @@ export default function SellerOrdersPage() {
   }, [])
 
   return (
-    <main className="container section">
-      <h1>Seller orders</h1>
-      {error && <p role="alert">{error}</p>}
-      {items.map(item => (
-        <article className="seller-product-row" key={item.id}>
+    <SellerShell title="Orders" description="Review purchases containing products from your store.">
+      {error && <p className="form-error" role="alert">{error}</p>}
+      <section className="admin-section">
+        <h2>Order items</h2>
+        {items.length === 0 && !error ? <p className="seller-empty">No orders yet.</p> : items.map(item => (
+        <article className="admin-order-row" key={item.id}>
           <div>
             <strong>{item.productName} × {item.quantity}</strong>
-            <p>Order {item.order.orderNumber} · {item.order.status}</p>
-            <p>Buyer: {item.order.user.name} · {item.order.user.email}</p>
-            <p>Fulfilment: {item.fulfillment?.status ?? 'Not assigned'}</p>
+            <small>Order {item.order.orderNumber} · {item.order.status}</small>
+            <small>Buyer: {item.order.user.name} · {item.order.user.email}</small>
+            <small>Fulfilment: {item.fulfillment?.status ?? 'Not assigned'}</small>
           </div>
           <strong>${Number(item.lineTotal).toFixed(2)}</strong>
         </article>
-      ))}
-    </main>
+        ))}
+      </section>
+    </SellerShell>
   )
 }

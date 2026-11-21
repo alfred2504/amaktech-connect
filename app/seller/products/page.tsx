@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { SellerShell } from '@/components/SellerShell'
 
 type Category = { id: string; name: string }
 type Product = {
@@ -128,9 +129,8 @@ export default function SellerProductsPage() {
   }
 
   return (
-    <main className="container section">
-      <h1>My products</h1>
-      <form className="seller-form-panel" onSubmit={createProduct}>
+    <SellerShell title="My products" description="Create products and keep your inventory up to date.">
+      <form className="admin-form" onSubmit={createProduct}>
         <h2>{editingId ? 'Edit product' : 'Add product'}</h2>
         <label>Name<input required minLength={3} value={form.name} onChange={event => update('name', event.target.value)} /></label>
         <label>Description<textarea required minLength={10} value={form.description} onChange={event => update('description', event.target.value)} /></label>
@@ -150,12 +150,12 @@ export default function SellerProductsPage() {
       </form>
       {error && <p className="form-error" role="alert">{error}</p>}
       {message && <p role="status">{message}</p>}
-      <section><h2>Inventory</h2>{loading ? <p>Loading products…</p> : products.map(product => <article className="seller-product-row" key={product.id}>
+      <section className="admin-section"><h2>Inventory</h2>{loading ? <p>Loading products…</p> : products.length === 0 ? <p className="seller-empty">No products yet. Add a product to get started.</p> : products.map(product => <article className="admin-order-row" key={product.id}>
         {product.images[0] && <img src={product.images[0].url} alt={product.name} width={72} height={72} />}
         <div><strong>{product.name}</strong><p>{product.category.name} · ${Number(product.price).toFixed(2)}</p><p>Stock: {product.stock} · {product.status}</p></div>
         {product.status !== 'ARCHIVED' && <button className="button secondary" onClick={() => editProduct(product)}>Edit</button>}
         {product.status !== 'ARCHIVED' && <button className="button secondary" onClick={() => archive(product.id)}>Archive</button>}
       </article>)}</section>
-    </main>
+    </SellerShell>
   )
 }
