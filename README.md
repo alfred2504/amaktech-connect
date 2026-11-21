@@ -22,6 +22,7 @@ Use the pooled `DATABASE_URL` for runtime traffic and the direct `DIRECT_URL` fo
 - Idempotent checkout with server-side price, discount, stock, and commission calculations
 - Seller onboarding, product editing/moderation, store profile, order fulfillment, and payout requests
 - Account-protected administration for categories, customers, sellers, products, orders, reviews, coupons, payments, shipments, and payouts
+- Super-admin-only administrator management; create `amaktechsolution@gmail.com` in the target database, then run `npm run db:promote-super-admin` to grant its protected role
 - Customer reviews, notifications, and payment-reference submission
 - Optional Supabase Storage uploads and Resend password-reset emails
 
@@ -36,5 +37,6 @@ Supabase uploads require a `products` bucket and a server-only `SUPABASE_SERVICE
 - `npm run db:generate` — generate the Prisma client
 - `npx prisma validate` — validate the schema
 - `npm run db:seed` — upsert marketplace categories
+- `npm run db:promote-super-admin` — promote the registered super-admin account without changing its password
 - `npm run lint` — lint the configured project paths
 - `npm run build` — generate Prisma client and create a production build

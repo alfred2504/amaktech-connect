@@ -1,3 +1,25 @@
-import {NextResponse} from 'next/server'; import type {NextRequest} from 'next/server';
-export function middleware(req:NextRequest){const p=req.nextUrl.pathname;if(!p.startsWith('/admin')&&!p.startsWith('/account')&&!p.startsWith('/checkout')&&!p.startsWith('/api/admin'))return NextResponse.next();if(!req.cookies.get('session')){const u=req.nextUrl.clone();u.pathname='/login';u.searchParams.set('next',p);return NextResponse.redirect(u)}return NextResponse.next()}
-export const config={matcher:['/admin/:path*','/account/:path*','/checkout','/api/admin/:path*']};
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { SESSION_COOKIE_NAME } from './lib/session-constants'
+
+export function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+  const protectedPath =
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/account') ||
+    pathname.startsWith('/checkout') ||
+    pathname.startsWith('/api/admin')
+
+  if (!protectedPath || request.cookies.get(SESSION_COOKIE_NAME)) {
+    return NextResponse.next()
+  }
+
+  const loginUrl = request.nextUrl.clone()
+  loginUrl.pathname = '/login'
+  loginUrl.searchParams.set('next', pathname)
+  return NextResponse.redirect(loginUrl)
+}
+
+export const config = {
+  matcher: ['/admin/:path*', '/account/:path*', '/checkout', '/api/admin/:path*'],
+}

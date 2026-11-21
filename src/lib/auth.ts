@@ -1,9 +1,9 @@
-import { getAuthenticatedUser } from '@/lib/auth'
+import { getAuthenticatedUser } from '../../lib/auth'
 import {
   clearSession,
   createSession as createSignedSession,
   getSession as getSignedSession,
-} from '@/lib/session'
+} from '../../lib/session'
 
 export type SessionUser = {
   id: string

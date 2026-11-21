@@ -1,7 +1,7 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { SESSION_COOKIE_NAME } from "./session-constants";
 
-const cookieName = "amaktech_session";
 function secret() {
   const value = process.env.BETTER_AUTH_SECRET;
   if (!value || value.length < 32) throw new Error("BETTER_AUTH_SECRET must be set to at least 32 characters.");
@@ -15,11 +15,11 @@ export async function createSession(user: SessionUser) {
     .setExpirationTime("7d")
     .sign(secret());
   const store = await cookies();
-  store.set(cookieName, token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 7 });
+  store.set(SESSION_COOKIE_NAME, token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 7 });
 }
 export async function getSession(): Promise<SessionUser | null> {
   const store = await cookies();
-  const token = store.get(cookieName)?.value;
+  const token = store.get(SESSION_COOKIE_NAME)?.value;
   if (!token) return null;
 
   const signingKey = secret();
@@ -50,5 +50,5 @@ export async function getSession(): Promise<SessionUser | null> {
 }
 export async function clearSession() {
   const store = await cookies();
-  store.set(cookieName, "", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 0 });
+  store.set(SESSION_COOKIE_NAME, "", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 0 });
 }

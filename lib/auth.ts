@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getSession } from './session'
 import { prisma } from './prisma'
+import { SUPER_ADMIN_EMAIL } from './admin-constants'
 
 export class AuthenticationError extends Error {
   constructor(readonly status: 401 | 403, message: string) {
@@ -43,6 +44,21 @@ export async function requireAdmin() {
   const user = await getAuthenticatedUser()
   if (!user) redirect('/login')
   if (user.role !== 'ADMIN') redirect('/')
+  return user
+}
+
+export async function requireSuperAdmin() {
+  const user = await getAuthenticatedUser()
+  if (!user) redirect('/login')
+  if (user.role !== 'ADMIN' || user.email.toLowerCase().trim() !== SUPER_ADMIN_EMAIL) redirect('/')
+  return user
+}
+
+export async function requireApiSuperAdmin() {
+  const user = await requireApiUser()
+  if (user.role !== 'ADMIN' || user.email.toLowerCase().trim() !== SUPER_ADMIN_EMAIL) {
+    throw new AuthenticationError(403, 'Super administrator access required.')
+  }
   return user
 }
 

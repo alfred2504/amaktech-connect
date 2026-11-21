@@ -22,6 +22,7 @@ export function AdminShell({
             <Link href="/admin/products">Products</Link>
             <Link href="/admin/orders">Orders</Link>
             <Link href="/admin/customers">Customers</Link>
+            <Link href="/admin/administrators">Administrators</Link>
             <Link href="/admin/categories">Categories</Link>
             <Link href="/admin/coupons">Coupons</Link>
             <Link href="/admin/payments">Payments</Link>

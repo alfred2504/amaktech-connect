@@ -10,7 +10,8 @@
     "lint": "eslint app/account app/admin app/api app/cart app/checkout app/forgot-password app/login app/logout app/products app/register app/reset-password app/seller app/shop app/vendor app/layout.tsx app/page.tsx components src lib scripts prisma middleware.ts next.config.ts eslint.config.mjs postcss.config.mjs",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "db:promote-super-admin": "tsx scripts/promote_super_admin.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",
